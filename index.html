@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Coaster to Coaster</title>
 
-  <!-- Phosphor Ticket Icon Favicon (#e11d48 Crimson, No Background, Light/Dark Tab Compatible) -->
+  <!-- Phosphor Ticket Icon Favicon (#e11d48, No Background, High Contrast on Light & Dark Tabs) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cline x1='96' y1='56' x2='96' y2='200' fill='none' stroke='%23e11d48' stroke-linecap='round' stroke-linejoin='round' stroke-width='20'/%3E%3Cpath d='M24,160a32,32,0,0,0,0-64V64a8,8,0,0,1,8-8H224a8,8,0,0,1,8,8V96a32,32,0,0,0,0,64v32a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8Z' fill='none' stroke='%23e11d48' stroke-linecap='round' stroke-linejoin='round' stroke-width='20'/%3E%3C/svg%3E" />
 
   <!-- Google Fonts: Geist & Geist Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -47,585 +47,884 @@
     * { -webkit-tap-highlight-color: transparent; }
     body {
       font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.015em;
     }
     .tabular-nums { font-variant-numeric: tabular-nums; }
-    #map { height: 100%; width: 100%; z-index: 10; background: #f4f4f5; }
+    #map { height: 100%; width: 100%; z-index: 10; background: #e4e4e7; }
     .dark #map { background: #09090b; }
 
-    /* Minimal Scrollbars */
-    .clean-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+    .clean-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
     .clean-scroll::-webkit-scrollbar-track { background: transparent; }
     .clean-scroll::-webkit-scrollbar-thumb { background: rgba(161, 161, 170, 0.25); border-radius: 9999px; }
     .clean-scroll::-webkit-scrollbar-thumb:hover { background: rgba(161, 161, 170, 0.45); }
 
-    /* Leaflet Popup Styling */
     .leaflet-popup-content-wrapper {
-      background: rgba(9, 9, 11, 0.94);
-      backdrop-filter: blur(12px);
+      background: rgba(9, 9, 11, 0.96);
+      backdrop-filter: blur(14px);
       color: #fafafa;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      box-shadow: 0 20px 38px -10px rgba(0, 0, 0, 0.65);
       padding: 0;
     }
-    .leaflet-popup-tip { background: rgba(9, 9, 11, 0.94); }
+    .leaflet-popup-tip { background: rgba(9, 9, 11, 0.96); }
     .leaflet-popup-content { margin: 12px 14px; font-family: 'Geist', sans-serif; }
     .leaflet-container a.leaflet-popup-close-button {
-      color: #71717a;
+      color: #a1a1aa;
       padding: 8px 8px 0 0;
     }
-    .leaflet-container a.leaflet-popup-close-button:hover { color: #fafafa; }
+    .leaflet-container a.leaflet-popup-close-button:hover { color: #ffffff; }
+
+    /* Illustrated Map Pin Pulse */
+    @keyframes subtlePulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.04); }
+    }
+    .illus-pin {
+      transform: translate(-50%, -50%);
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+    }
+    .illus-pin:hover {
+      transform: translate(-50%, -50%) scale(1.12);
+      z-index: 40 !important;
+    }
   </style>
 </head>
 
 <body class="h-[100dvh] w-screen overflow-hidden flex flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 select-none antialiased">
 
-  <!-- Minimal Typographic Header -->
-  <header class="h-14 shrink-0 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 px-4 lg:px-6 flex items-center justify-between gap-4 z-30">
-    <!-- Pure Wordmark (No App Icon Box) -->
-    <button onclick="resetWorldView()" class="text-left focus:outline-none group flex items-baseline gap-2.5">
-      <span class="text-[15px] font-semibold tracking-[-0.025em] text-zinc-900 dark:text-zinc-100 group-hover:text-accent-600 dark:group-hover:text-accent-400 transition-colors">
-        Coaster to Coaster
+  <!-- Minimal Typographic Header (No App Icon Box) -->
+  <header class="h-14 shrink-0 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 px-4 lg:px-6 flex items-center justify-between gap-4 z-30">
+    <div class="flex items-center gap-3 min-w-0">
+      <button onclick="resetWorldView()" class="text-left focus:outline-none group flex items-baseline gap-2.5">
+        <span class="text-base font-bold tracking-[-0.03em] text-zinc-900 dark:text-zinc-100 group-hover:text-accent-600 dark:group-hover:text-accent-400 transition-colors">
+          Coaster to Coaster
+        </span>
+      </button>
+      <span class="text-zinc-300 dark:text-zinc-800">/</span>
+      <span id="header-context" class="font-mono text-xs text-zinc-500 dark:text-zinc-400 truncate">
+        World Park Atlas
       </span>
-      <span id="header-context" class="hidden sm:inline font-mono text-[11px] text-zinc-400 dark:text-zinc-500">
-        World Index
-      </span>
-    </button>
+    </div>
 
-    <!-- Center Segmented Filter (Desktop) -->
+    <!-- Center Category Switcher (Desktop) -->
     <div class="hidden md:flex items-center bg-zinc-100 dark:bg-zinc-900 p-0.5 rounded-lg border border-zinc-200/70 dark:border-zinc-800 text-xs">
       <button onclick="setCategoryFilter('core')" id="btn-cat-core" class="px-3 py-1 rounded-md font-medium transition-all bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm">
-        Core Parks <span class="font-mono text-[11px] text-zinc-400 ml-1">11</span>
+        Core Theme Parks <span class="font-mono text-[11px] text-zinc-400 ml-1">11</span>
       </button>
       <button onclick="setCategoryFilter('all')" id="btn-cat-all" class="px-3 py-1 rounded-md font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all">
-        Extended <span class="font-mono text-[11px] text-zinc-400 ml-1">16</span>
+        + Studios, Aquariums & Villages <span class="font-mono text-[11px] text-zinc-400 ml-1">16</span>
       </button>
     </div>
 
-    <!-- Right Telemetry & Actions -->
-    <div class="flex items-center gap-3">
-      <div class="flex items-center gap-3 font-mono text-xs tabular-nums bg-zinc-100/80 dark:bg-zinc-900/80 px-3 py-1.5 rounded-lg border border-zinc-200/60 dark:border-zinc-800/80">
-        <span class="text-zinc-500 dark:text-zinc-400">Logged</span>
+    <!-- Right Ride Credits Telemetry & Theme Toggle -->
+    <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-2.5 font-mono text-xs tabular-nums bg-zinc-100/90 dark:bg-zinc-900/90 px-3 py-1.5 rounded-lg border border-zinc-200/70 dark:border-zinc-800">
+        <i class="ph-fill ph-ticket text-accent-500 text-sm"></i>
+        <span class="text-zinc-500 dark:text-zinc-400 hidden sm:inline">Credits</span>
         <span id="stat-rides" class="font-semibold text-zinc-900 dark:text-zinc-100">0 / 0</span>
       </div>
 
-      <button onclick="resetWorldView()" id="world-reset-btn" title="World Overview" class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200/80 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200/70 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition">
-        <i class="ph ph-globe-simple text-sm"></i>
-        <span class="hidden sm:inline">World Map</span>
+      <button onclick="resetWorldView()" id="world-reset-btn" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90 transition">
+        <i class="ph-bold ph-globe-hemisphere-east text-sm"></i>
+        <span class="hidden sm:inline">World Atlas</span>
       </button>
 
-      <button onclick="toggleTheme()" title="Toggle Theme" class="w-8 h-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition">
+      <button onclick="toggleTheme()" title="Toggle Light/Dark Mode" class="w-8 h-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition">
         <i id="theme-icon" class="ph ph-sun text-base"></i>
       </button>
     </div>
   </header>
 
-  <!-- Main Split Workspace -->
+  <!-- Main Workspace -->
   <div class="flex-1 flex overflow-hidden relative">
 
-    <!-- Left Sidebar: Directory & Active Park Checklist -->
-    <aside id="left-drawer" class="w-full lg:w-[390px] xl:w-[410px] shrink-0 bg-white dark:bg-zinc-950 border-r border-zinc-200/80 dark:border-zinc-800/80 flex flex-col z-20">
+    <!-- Left Sidebar: Visual Park Directory OR Active Park Ride Checklist -->
+    <aside id="left-drawer" class="w-full lg:w-[420px] xl:w-[450px] shrink-0 bg-white dark:bg-zinc-950 border-r border-zinc-200/80 dark:border-zinc-800/80 flex flex-col z-20">
 
-      <!-- STATE 1: Global Park Directory -->
+      <!-- STATE 1: Visual Theme Park Directory -->
       <div id="view-directory" class="flex-1 flex flex-col overflow-hidden">
-        <!-- Mobile Category Toggle -->
+        <!-- Mobile Category Switcher -->
         <div class="md:hidden px-4 pt-3 flex items-center gap-1.5">
           <button onclick="setCategoryFilter('core')" id="m-btn-cat-core" class="flex-1 py-1.5 rounded-lg text-xs font-medium bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
             Core Parks (11)
           </button>
           <button onclick="setCategoryFilter('all')" id="m-btn-cat-all" class="flex-1 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400">
-            Extended (16)
+            All Visited (16)
           </button>
         </div>
 
-        <!-- Search & Region Bar -->
+        <!-- Search & Region Pills -->
         <div class="p-3.5 border-b border-zinc-200/70 dark:border-zinc-800/80 space-y-2.5">
           <div class="relative">
             <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm"></i>
-            <input type="text" id="park-search" oninput="renderParkDirectory()" placeholder="Filter parks, cities, or rides..."
+            <input type="text" id="park-search" oninput="renderParkDirectory()" placeholder="Search parks, coasters, or themed lands..."
               class="w-full bg-zinc-100/80 dark:bg-zinc-900/90 border border-zinc-200/70 dark:border-zinc-800 rounded-lg pl-8 pr-7 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 transition" />
             <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
               <i class="ph ph-x text-xs"></i>
             </button>
           </div>
 
-          <!-- Region Pills -->
           <div class="flex items-center gap-1 overflow-x-auto clean-scroll text-[11px] font-medium">
             <button onclick="setRegionFilter('ALL')" data-region="ALL" class="region-pill shrink-0 px-2.5 py-1 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 transition">
-              All
+              All Destinations
             </button>
             <button onclick="setRegionFilter('UAE')" data-region="UAE" class="region-pill shrink-0 px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition">
-              UAE
+              Abu Dhabi & Dubai
             </button>
             <button onclick="setRegionFilter('ASIA')" data-region="ASIA" class="region-pill shrink-0 px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition">
-              Asia
+              Tokyo · Osaka · Shanghai · Singapore
             </button>
             <button onclick="setRegionFilter('NA')" data-region="NA" class="region-pill shrink-0 px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition">
-              Canada
+              Toronto
             </button>
             <button onclick="setRegionFilter('UK')" data-region="UK" class="region-pill shrink-0 px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition">
-              UK
+              London
             </button>
           </div>
         </div>
 
-        <!-- Park List -->
-        <div id="park-list" class="flex-1 overflow-y-auto clean-scroll divide-y divide-zinc-100 dark:divide-zinc-900"></div>
+        <!-- Visual Park Cards Feed -->
+        <div id="park-list" class="flex-1 overflow-y-auto clean-scroll p-3.5 space-y-3"></div>
       </div>
 
-      <!-- STATE 2: Active Park Ride Tracker -->
+      <!-- STATE 2: Active Park Hero, Logo & Ride Checklist -->
       <div id="view-park-detail" class="hidden flex-1 flex flex-col overflow-hidden">
-        <!-- Clean Park Header -->
-        <div class="p-4 border-b border-zinc-200/80 dark:border-zinc-800/80 space-y-3">
-          <div class="flex items-center justify-between">
-            <button onclick="resetWorldView()" class="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition">
-              <i class="ph ph-arrow-left text-sm"></i>
+        <!-- Cinematic Park Hero Header with Logo & Photography -->
+        <div class="relative h-44 shrink-0 bg-zinc-900 overflow-hidden">
+          <img id="detail-hero-img" src="" alt="" class="w-full h-full object-cover opacity-75 transition-transform duration-700 hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/55 to-zinc-950/20"></div>
+
+          <!-- Top Bar Inside Hero -->
+          <div class="absolute top-3 left-3.5 right-3.5 flex items-center justify-between">
+            <button onclick="resetWorldView()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-950/75 hover:bg-zinc-950 text-white backdrop-blur-md border border-white/15 text-xs font-medium transition">
+              <i class="ph-bold ph-arrow-left text-xs"></i>
               <span>All Parks</span>
             </button>
 
             <a id="detail-official-map-link" href="#" target="_blank" rel="noopener noreferrer"
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-accent-600 hover:bg-accent-500 text-white text-xs font-medium transition">
-              <i class="ph ph-map-trifold text-sm"></i>
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/95 hover:bg-white text-zinc-950 text-xs font-semibold shadow-md transition">
+              <i class="ph-bold ph-map-trifold text-sm text-accent-600"></i>
               <span>Official Park Map</span>
-              <i class="ph ph-arrow-up-right text-[11px]"></i>
+              <i class="ph-bold ph-arrow-up-right text-[11px]"></i>
             </a>
           </div>
 
-          <div>
-            <h2 id="detail-title" class="text-base font-semibold tracking-[-0.02em] text-zinc-900 dark:text-zinc-100"></h2>
-            <p id="detail-location" class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"></p>
+          <!-- Park Logo Badge + Title Bottom Overlay -->
+          <div class="absolute bottom-3 left-3.5 right-3.5 flex items-end justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div id="detail-logo-box" class="w-12 h-12 rounded-xl bg-white p-1.5 shrink-0 shadow-lg border border-white/20 flex items-center justify-center overflow-hidden"></div>
+              <div class="min-w-0">
+                <span id="detail-park-tag" class="inline-block font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/15 text-white/90 backdrop-blur-sm mb-1"></span>
+                <h2 id="detail-title" class="text-base font-bold text-white tracking-tight truncate"></h2>
+                <p id="detail-location" class="text-xs text-zinc-300 truncate"></p>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <!-- Progress Bar & Quick Toggle -->
-          <div class="pt-1">
+        <!-- Park Progress & Quick Filter Bar -->
+        <div class="px-4 py-3 bg-zinc-50/80 dark:bg-zinc-900/50 border-b border-zinc-200/80 dark:border-zinc-800/80 space-y-2.5">
+          <div>
             <div class="flex items-center justify-between text-xs mb-1.5">
-              <span id="detail-progress-text" class="font-mono text-[11px] font-medium text-zinc-600 dark:text-zinc-300 tabular-nums">0 / 0 ridden</span>
-              <button onclick="toggleAllParkRides()" class="text-[11px] font-medium text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition">
-                Toggle All
+              <span id="detail-progress-text" class="font-mono text-xs font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">0 / 0 rides logged</span>
+              <button onclick="toggleAllParkRides()" class="text-[11px] font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center gap-1 transition">
+                <i class="ph-bold ph-checks"></i>
+                <span>Check All</span>
               </button>
             </div>
-            <div class="w-full h-1.5 bg-zinc-100 dark:bg-zinc-900 rounded-full overflow-hidden">
+            <div class="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
               <div id="detail-progress-bar" class="h-full bg-accent-600 transition-all duration-300" style="width: 0%"></div>
             </div>
           </div>
-        </div>
 
-        <!-- Filter Bar -->
-        <div class="px-4 py-2 bg-zinc-50/60 dark:bg-zinc-900/40 border-b border-zinc-200/70 dark:border-zinc-800/80 flex items-center justify-between">
-          <div class="flex items-center gap-1 text-[11px] font-medium">
-            <button onclick="setRideStatusFilter('all')" id="rf-all" class="px-2 py-0.5 rounded bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 transition">
-              All
-            </button>
-            <button onclick="setRideStatusFilter('ridden')" id="rf-ridden" class="px-2 py-0.5 rounded text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition">
-              Ridden
-            </button>
-            <button onclick="setRideStatusFilter('unridden')" id="rf-unridden" class="px-2 py-0.5 rounded text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition">
-              Remaining
+          <div class="flex items-center justify-between pt-0.5">
+            <div class="flex items-center gap-1 text-[11px] font-medium">
+              <button onclick="setRideStatusFilter('all')" id="rf-all" class="px-2.5 py-1 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 transition">
+                All Attractions
+              </button>
+              <button onclick="setRideStatusFilter('ridden')" id="rf-ridden" class="px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition">
+                Ridden
+              </button>
+              <button onclick="setRideStatusFilter('unridden')" id="rf-unridden" class="px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition">
+                Remaining
+              </button>
+            </div>
+
+            <button onclick="toggleAddRideDrawer()" class="text-[11px] font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center gap-1 transition">
+              <i class="ph-bold ph-plus text-xs"></i>
+              <span>Add Ride</span>
             </button>
           </div>
+        </div>
 
-          <button onclick="toggleAddRideDrawer()" class="text-[11px] font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center gap-1 transition">
-            <i class="ph ph-plus text-xs"></i>
-            <span>Custom Ride</span>
+        <!-- Collapsible Add Ride Bar -->
+        <div id="custom-ride-drawer" class="hidden px-4 py-2.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex gap-1.5">
+          <input type="text" id="new-ride-name" placeholder="Attraction name..."
+            class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md px-2.5 py-1 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none" />
+          <input type="text" id="new-ride-land" placeholder="Themed Land"
+            class="w-28 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none" />
+          <button onclick="addCustomRide()" class="px-3 py-1 bg-accent-600 text-white rounded-md text-xs font-medium">
+            Add
           </button>
         </div>
 
-        <!-- Collapsible Custom Ride Popover (Hidden by Default to Avoid Clutter) -->
-        <div id="custom-ride-drawer" class="hidden px-4 py-2.5 bg-zinc-100/70 dark:bg-zinc-900/80 border-b border-zinc-200/70 dark:border-zinc-800 flex gap-1.5">
-          <input type="text" id="new-ride-name" placeholder="Ride name..."
-            class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md px-2.5 py-1 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400" />
-          <input type="text" id="new-ride-land" placeholder="Land/Zone"
-            class="w-24 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400" />
-          <button onclick="addCustomRide()" class="px-2.5 py-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-md text-xs font-medium">
-            Save
-          </button>
-        </div>
-
-        <!-- Grouped Ride Checklist -->
+        <!-- Ride Checklist by Themed Land -->
         <div id="detail-rides-container" class="flex-1 overflow-y-auto clean-scroll p-4 space-y-5"></div>
       </div>
     </aside>
 
-    <!-- Interactive Map Canvas -->
-    <main id="map-workspace" class="hidden lg:block flex-1 relative h-full">
-      <div id="map"></div>
+    <!-- Right Main Viewport: World Map + Park-Specific Illustrated & Official Map Views -->
+    <main id="map-workspace" class="hidden lg:flex flex-1 flex-col relative h-full overflow-hidden bg-zinc-950">
 
-      <!-- Minimal Map Mode Pill (Top Right) -->
-      <div class="absolute top-3.5 right-3.5 z-20 flex items-center bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800 p-1 rounded-lg shadow-sm text-xs font-medium">
-        <button onclick="switchBasemap('canvas')" id="base-canvas" class="px-2.5 py-1 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 transition">
-          Atlas
-        </button>
-        <button onclick="switchBasemap('park')" id="base-park" class="px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition">
-          Park Layout
-        </button>
-        <button onclick="switchBasemap('satellite')" id="base-satellite" class="px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition">
-          Satellite
-        </button>
+      <!-- Contextual Top Map Mode Bar (Appears when a Park is selected) -->
+      <div id="park-map-toolbar" class="hidden absolute top-3.5 left-3.5 right-3.5 z-30 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <!-- Left: Active Park Map Mode Switcher -->
+        <div class="pointer-events-auto flex items-center bg-zinc-950/90 backdrop-blur-md border border-white/15 p-1 rounded-xl shadow-2xl text-xs font-medium text-zinc-300">
+          <button onclick="setParkMapView('illustrated')" id="pmode-illustrated" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-600 text-white font-semibold transition">
+            <i class="ph-bold ph-map-trifold"></i>
+            <span>Illustrated Park Map</span>
+          </button>
+          <button onclick="setParkMapView('satellite')" id="pmode-satellite" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:text-white transition">
+            <i class="ph-bold ph-planet"></i>
+            <span>Aerial Coaster Map</span>
+          </button>
+          <button onclick="setParkMapView('official')" id="pmode-official" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:text-white transition">
+            <i class="ph-bold ph-file-pdf"></i>
+            <span>Official Map Brochure</span>
+          </button>
+        </div>
+
+        <!-- Right: Legend / Official Source Link -->
+        <div class="pointer-events-auto flex items-center gap-2 bg-zinc-950/90 backdrop-blur-md border border-white/15 px-3 py-1.5 rounded-xl shadow-2xl text-[11px] text-zinc-300">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Ridden</span>
+          </span>
+          <span class="text-zinc-600">•</span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-zinc-400"></span>
+            <span>Unridden</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- LAYER A: Leaflet World Atlas & Aerial Coaster Map -->
+      <div id="map" class="flex-1"></div>
+
+      <!-- LAYER B: Interactive Illustrated Park Map Canvas (Opens automatically when clicking a park) -->
+      <div id="illustrated-map-stage" class="hidden absolute inset-0 z-20 bg-[#0c1017] flex flex-col overflow-hidden">
+        <!-- Interactive Pan/Zoom Illustrated Park Map Container -->
+        <div id="illustrated-canvas-wrapper" class="flex-1 relative overflow-auto clean-scroll flex items-center justify-center p-4 sm:p-8">
+          <div id="illustrated-park-board" class="relative w-full max-w-[1050px] aspect-[16/10] rounded-2xl overflow-hidden shadow-2xl border border-white/15 bg-zinc-900 select-none">
+            <!-- SVG Architectural & Themed Land Park Map Rendered Dynamically Per Park -->
+            <div id="illustrated-svg-layer" class="absolute inset-0 w-full h-full"></div>
+            <!-- Interactive Ride Pins Overlaid on the Illustrated Park Map -->
+            <div id="illustrated-pins-layer" class="absolute inset-0 w-full h-full"></div>
+          </div>
+        </div>
+
+        <!-- Bottom Bar on Illustrated Map: Themed Lands Legend & Official Map Trigger -->
+        <div class="h-12 shrink-0 bg-zinc-950/95 border-t border-white/10 px-4 flex items-center justify-between gap-4 text-xs text-zinc-400">
+          <div id="illustrated-lands-legend" class="flex items-center gap-3 overflow-x-auto clean-scroll py-1"></div>
+          <div class="shrink-0 flex items-center gap-2">
+            <button onclick="setParkMapView('official')" class="px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/15 text-white text-[11px] font-medium flex items-center gap-1.5 transition">
+              <i class="ph-bold ph-arrows-out-simple"></i>
+              <span>Open Official Brochure</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYER C: Official Park Map Brochure / PDF & High-Res Map Sheet Viewer -->
+      <div id="official-brochure-stage" class="hidden absolute inset-0 z-20 bg-zinc-950 flex flex-col pt-16">
+        <div id="official-brochure-content" class="flex-1 flex flex-col overflow-hidden"></div>
       </div>
     </main>
   </div>
 
   <!-- Mobile Bottom Bar (< lg) -->
-  <nav class="lg:hidden h-13 shrink-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800/80 grid grid-cols-2 px-4 py-1.5 z-30">
-    <button onclick="switchMobileTab('list')" id="mob-tab-list" class="flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
-      <i class="ph ph-list-checks text-base"></i>
-      <span>Parks & Rides</span>
+  <nav class="lg:hidden h-14 shrink-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800/80 grid grid-cols-2 px-4 py-2 gap-2 z-30">
+    <button onclick="switchMobileTab('list')" id="mob-tab-list" class="flex items-center justify-center gap-2 rounded-lg text-xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
+      <i class="ph-bold ph-ticket text-sm"></i>
+      <span>Parks & Ride Log</span>
     </button>
-    <button onclick="switchMobileTab('map')" id="mob-tab-map" class="flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-medium text-zinc-500 dark:text-zinc-400">
-      <i class="ph ph-map-trifold text-base"></i>
-      <span>Interactive Map</span>
+    <button onclick="switchMobileTab('map')" id="mob-tab-map" class="flex items-center justify-center gap-2 rounded-lg text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+      <i class="ph-bold ph-map-trifold text-sm"></i>
+      <span id="mob-map-label">World & Park Maps</span>
     </button>
   </nav>
 
   <script>
-    // Complete Dataset of 11 Core Theme Parks + 5 Extended Attractions
+    // Complete Visual & Cartographic Dataset for Your 11 Core Theme Parks + 5 Extended Attractions
     const PARKS_DATA = [
       {
         id: "ferrari-world",
         name: "Ferrari World Abu Dhabi",
-        city: "Yas Island, Abu Dhabi",
+        shortName: "Ferrari World",
+        city: "Yas Island, Abu Dhabi, UAE",
         region: "UAE",
         category: "core",
+        brandColor: "#dc2626",
+        accentBg: "from-red-950 via-zinc-950 to-zinc-950",
         coords: [24.4836, 54.6070],
         zoom: 17,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Formula_Rossa_coaster.jpg?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari_World_Abu_Dhabi_logo.svg?width=300",
+        logoFallback: "FW",
         officialMapUrl: "https://www.ferrariworldabudhabi.com/en/explore/park-map",
+        embedPdfUrl: null,
+        mapStyle: "tri-dome",
+        lands: [
+          { name: "Racing Zone", color: "#ef4444", cx: 26, cy: 35, rx: 18, ry: 22 },
+          { name: "Italian Zone", color: "#16a34a", cx: 72, cy: 40, rx: 20, ry: 24 },
+          { name: "Adventure Zone", color: "#f59e0b", cx: 50, cy: 52, rx: 16, ry: 18 },
+          { name: "Family Zone", color: "#3b82f6", cx: 35, cy: 74, rx: 18, ry: 16 }
+        ],
         rides: [
-          { id: "fw-1", name: "Formula Rossa", land: "Racing Zone", type: "Intamin Strata Coaster", offset: [0.0012, -0.0015] },
-          { id: "fw-2", name: "Flying Aces", land: "Italian Zone", type: "Intamin Wing Coaster", offset: [0.0010, 0.0012] },
-          { id: "fw-3", name: "Mission Ferrari", land: "Italian Zone", type: "Dynamic SFX Coaster", offset: [-0.0006, 0.0014] },
-          { id: "fw-4", name: "Turbo Track", land: "Adventure Zone", type: "Vertical Spike Launch", offset: [0.0002, 0.0001] },
-          { id: "fw-5", name: "Fiorano GT Challenge", land: "Racing Zone", type: "Dueling Launch Coaster", offset: [0.0015, -0.0004] },
-          { id: "fw-6", name: "Viaggio in Italia", land: "Italian Zone", type: "Flying Theater", offset: [-0.0009, 0.0007] },
-          { id: "fw-7", name: "Formula Rossa Junior", land: "Family Zone", type: "Junior Coaster", offset: [-0.0010, -0.0009] },
-          { id: "fw-8", name: "Speed of Magic", land: "Adventure Zone", type: "4D Dark Simulator", offset: [0.0004, -0.0008] },
-          { id: "fw-9", name: "Bell'Italia", land: "Italian Zone", type: "Vintage Car Tour", offset: [-0.0012, 0.0003] }
+          { id: "fw-1", name: "Formula Rossa", land: "Racing Zone", type: "Intamin Strata Coaster · 240 km/h", offset: [0.0012, -0.0015], mapPos: [20, 24] },
+          { id: "fw-2", name: "Flying Aces", land: "Italian Zone", type: "Intamin Wing Coaster · 63m Loop", offset: [0.0010, 0.0012], mapPos: [76, 25] },
+          { id: "fw-3", name: "Mission Ferrari", land: "Italian Zone", type: "Dynamic SFX Coaster", offset: [-0.0006, 0.0014], mapPos: [78, 52] },
+          { id: "fw-4", name: "Turbo Track", land: "Adventure Zone", type: "Intamin Vertical Spike Launch", offset: [0.0002, 0.0001], mapPos: [50, 46] },
+          { id: "fw-5", name: "Fiorano GT Challenge", land: "Racing Zone", type: "Maurer Dueling Launch Coaster", offset: [0.0015, -0.0004], mapPos: [32, 38] },
+          { id: "fw-6", name: "Viaggio in Italia", land: "Italian Zone", type: "Flying Theater Over Italy", offset: [-0.0009, 0.0007], mapPos: [64, 44] },
+          { id: "fw-7", name: "Formula Rossa Junior", land: "Family Zone", type: "Zamperla Junior Coaster", offset: [-0.0010, -0.0009], mapPos: [32, 74] },
+          { id: "fw-8", name: "Speed of Magic", land: "Adventure Zone", type: "4D Motion Dark Ride", offset: [0.0004, -0.0008], mapPos: [46, 60] },
+          { id: "fw-9", name: "Bell'Italia", land: "Italian Zone", type: "Ferrari 250 California Tour", offset: [-0.0012, 0.0003], mapPos: [68, 66] }
         ]
       },
       {
         id: "wb-world",
         name: "Warner Bros. World Abu Dhabi",
-        city: "Yas Island, Abu Dhabi",
+        shortName: "Warner Bros. World",
+        city: "Yas Island, Abu Dhabi, UAE",
         region: "UAE",
         category: "core",
+        brandColor: "#2563eb",
+        accentBg: "from-blue-950 via-zinc-950 to-zinc-950",
         coords: [24.4910, 54.5986],
         zoom: 17,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari_World_Abu_Dhabi_(28603881208).jpg?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Warner_Bros._logo_2023.svg?width=300",
+        logoFallback: "WB",
         officialMapUrl: "https://www.wbworldabudhabi.com/en/explore/park-map",
+        embedPdfUrl: null,
+        mapStyle: "indoor-hub",
+        lands: [
+          { name: "Gotham City", color: "#6366f1", cx: 74, cy: 30, rx: 18, ry: 18 },
+          { name: "Metropolis", color: "#0ea5e9", cx: 74, cy: 68, rx: 18, ry: 18 },
+          { name: "Cartoon Junction", color: "#ec4899", cx: 28, cy: 68, rx: 19, ry: 18 },
+          { name: "Dynamite Gulch", color: "#f97316", cx: 28, cy: 30, rx: 18, ry: 17 },
+          { name: "Bedrock", color: "#84cc16", cx: 50, cy: 24, rx: 14, ry: 14 }
+        ],
         rides: [
-          { id: "wb-1", name: "Batman: Knight Flight", land: "Gotham City", type: "Robotic Arm Dark Ride", offset: [0.0008, 0.0009] },
-          { id: "wb-2", name: "The Riddler Revolution", land: "Gotham City", type: "Disk'O Coaster", offset: [0.0011, 0.0004] },
-          { id: "wb-3", name: "Scarecrow Scare Raid", land: "Gotham City", type: "Aerobatic Flight", offset: [0.0006, 0.0012] },
-          { id: "wb-4", name: "Justice League: Warworld Attacks", land: "Metropolis", type: "5D Motion Dark Ride", offset: [-0.0010, 0.0005] },
-          { id: "wb-5", name: "Green Lantern: Galactic Odyssey", land: "Metropolis", type: "Flying Theater", offset: [-0.0008, 0.0001] },
-          { id: "wb-6", name: "Superman 360: Battle for Metropolis", land: "Metropolis", type: "360 Projection Arena", offset: [-0.0007, 0.0009] },
-          { id: "wb-7", name: "Fast and Furry-ous", land: "Dynamite Gulch", type: "Intamin Inverted Coaster", offset: [0.0009, -0.0009] },
-          { id: "wb-8", name: "Tom and Jerry: Swiss Cheese Spin", land: "Cartoon Junction", type: "Spinning Coaster", offset: [-0.0002, -0.0009] },
-          { id: "wb-9", name: "Scooby-Doo: The Museum of Mysteries", land: "Cartoon Junction", type: "Trackless Dark Ride", offset: [-0.0006, -0.0007] },
-          { id: "wb-10", name: "The Flintstones Bedrock River Adventure", land: "Bedrock", type: "Boat Flume", offset: [0.0005, -0.0004] }
+          { id: "wb-1", name: "Batman: Knight Flight", land: "Gotham City", type: "Robotic Arm Dark Thrill Ride", offset: [0.0008, 0.0009], mapPos: [78, 24] },
+          { id: "wb-2", name: "The Riddler Revolution", land: "Gotham City", type: "Zamperla Disk'O Coaster", offset: [0.0011, 0.0004], mapPos: [68, 34] },
+          { id: "wb-3", name: "Scarecrow Scare Raid", land: "Gotham City", type: "Aerobatic Interactive Flight", offset: [0.0006, 0.0012], mapPos: [82, 38] },
+          { id: "wb-4", name: "Justice League: Warworld Attacks", land: "Metropolis", type: "5D Motion Dark Ride", offset: [-0.0010, 0.0005], mapPos: [78, 66] },
+          { id: "wb-5", name: "Green Lantern: Galactic Odyssey", land: "Metropolis", type: "4D Flying Theater", offset: [-0.0008, 0.0001], mapPos: [66, 74] },
+          { id: "wb-6", name: "Superman 360: Battle for Metropolis", land: "Metropolis", type: "360 Projection Arena", offset: [-0.0007, 0.0009], mapPos: [80, 78] },
+          { id: "wb-7", name: "Fast and Furry-ous", land: "Dynamite Gulch", type: "Intamin Inverted Coaster", offset: [0.0009, -0.0009], mapPos: [25, 28] },
+          { id: "wb-8", name: "Tom and Jerry: Swiss Cheese Spin", land: "Cartoon Junction", type: "Mack Spinning Coaster", offset: [-0.0002, -0.0009], mapPos: [24, 64] },
+          { id: "wb-9", name: "Scooby-Doo: The Museum of Mysteries", land: "Cartoon Junction", type: "Trackless Dark Ride", offset: [-0.0006, -0.0007], mapPos: [34, 74] },
+          { id: "wb-10", name: "The Flintstones Bedrock River Adventure", land: "Bedrock", type: "Scenic Boat Flume", offset: [0.0005, -0.0004], mapPos: [50, 24] }
         ]
       },
       {
         id: "seaworld-ad",
-        name: "SeaWorld Yas Island",
-        city: "Yas Island, Abu Dhabi",
+        name: "SeaWorld Yas Island, Abu Dhabi",
+        shortName: "SeaWorld Abu Dhabi",
+        city: "Yas Island, Abu Dhabi, UAE",
         region: "UAE",
         category: "core",
+        brandColor: "#0284c7",
+        accentBg: "from-sky-950 via-zinc-950 to-zinc-950",
         coords: [24.4955, 54.6145],
         zoom: 17,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/SeaWorld_Aquarium.JPG?width=900",
+        logoUrl: null,
+        logoFallback: "SW",
         officialMapUrl: "https://www.seaworldabudhabi.com/en/explore/park-map",
+        embedPdfUrl: null,
+        mapStyle: "ocean-realms",
+        lands: [
+          { name: "Tropical Ocean", color: "#06b6d4", cx: 74, cy: 32, rx: 19, ry: 20 },
+          { name: "Endless Ocean", color: "#0284c7", cx: 50, cy: 50, rx: 16, ry: 16 },
+          { name: "MicroOcean", color: "#ec4899", cx: 26, cy: 66, rx: 18, ry: 18 },
+          { name: "Arctic", color: "#38bdf8", cx: 28, cy: 30, rx: 17, ry: 16 }
+        ],
         rides: [
-          { id: "sw-1", name: "Manta Coaster", land: "Tropical Ocean", type: "Intamin Multi-Launch Coaster", offset: [0.0012, 0.0010] },
-          { id: "sw-2", name: "Eel Racer", land: "MicroOcean", type: "Family Coaster", offset: [-0.0008, -0.0007] },
-          { id: "sw-3", name: "Hypersphere 360", land: "Arctic", type: "Dome Ride Theater", offset: [0.0007, -0.0009] },
-          { id: "sw-4", name: "Jelly Plunge", land: "MicroOcean", type: "Drop Tower", offset: [-0.0005, -0.0009] },
-          { id: "sw-5", name: "Octozoom!", land: "MicroOcean", type: "Spinning Whip Ride", offset: [-0.0009, -0.0004] },
-          { id: "sw-6", name: "Endless Ocean Aquarium", land: "Endless Ocean", type: "Marine Habitat", offset: [0.0001, 0.0002] }
+          { id: "sw-1", name: "Manta Coaster", land: "Tropical Ocean", type: "Intamin Multi-Launch Coaster", offset: [0.0012, 0.0010], mapPos: [76, 28] },
+          { id: "sw-2", name: "Eel Racer", land: "MicroOcean", type: "Zierer Family Coaster", offset: [-0.0008, -0.0007], mapPos: [22, 62] },
+          { id: "sw-3", name: "Hypersphere 360°", land: "Arctic", type: "Intamin Dome Ride Theater", offset: [0.0007, -0.0009], mapPos: [28, 28] },
+          { id: "sw-4", name: "Jelly Plunge", land: "MicroOcean", type: "Family Drop Tower", offset: [-0.0005, -0.0009], mapPos: [32, 68] },
+          { id: "sw-5", name: "Octozoom!", land: "MicroOcean", type: "Spinning Whip Ride", offset: [-0.0009, -0.0004], mapPos: [24, 76] },
+          { id: "sw-6", name: "Endless Ocean Circular Habitat", land: "Endless Ocean", type: "68M-Litre Marine Aquarium", offset: [0.0001, 0.0002], mapPos: [50, 50] }
         ]
       },
       {
         id: "motiongate-dubai",
         name: "Motiongate Dubai",
-        city: "Dubai Parks and Resorts",
+        shortName: "Motiongate",
+        city: "Dubai Parks and Resorts, UAE",
         region: "UAE",
         category: "core",
+        brandColor: "#7c3aed",
+        accentBg: "from-violet-950 via-zinc-950 to-zinc-950",
         coords: [24.9200, 55.0061],
         zoom: 17,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Motiongate_Dubai_-_27896293658.jpg?width=900",
+        logoUrl: null,
+        logoFallback: "MG",
         officialMapUrl: "https://www.dubaiparksandresorts.com/sites/default/files/2024-11/MGD22_023_NewParkMapDigital_01.pdf",
+        embedPdfUrl: "https://www.dubaiparksandresorts.com/sites/default/files/2024-11/MGD22_023_NewParkMapDigital_01.pdf",
+        mapStyle: "hub-spoke",
+        lands: [
+          { name: "Lionsgate", color: "#f59e0b", cx: 74, cy: 70, rx: 18, ry: 18 },
+          { name: "DreamWorks", color: "#3b82f6", cx: 72, cy: 30, rx: 20, ry: 20 },
+          { name: "Columbia Pictures", color: "#ef4444", cx: 26, cy: 34, rx: 19, ry: 20 },
+          { name: "Smurfs Village", color: "#06b6d4", cx: 30, cy: 68, rx: 16, ry: 16 }
+        ],
         rides: [
-          { id: "mg-1", name: "Capitol Bullet Train", land: "Lionsgate", type: "Mack Half-Pipe Launch Coaster", offset: [-0.0012, 0.0010] },
-          { id: "mg-2", name: "John Wick: Open Contract", land: "Lionsgate", type: "S&S 4D Free Spin", offset: [-0.0014, 0.0005] },
-          { id: "mg-3", name: "Now You See Me: High Roller", land: "Lionsgate", type: "Maurer Spinning Coaster", offset: [-0.0010, 0.0003] },
-          { id: "mg-4", name: "Madagascar Mad Pursuit!", land: "DreamWorks", type: "Gerstlauer Launch Coaster", offset: [0.0008, 0.0012] },
-          { id: "mg-5", name: "Dragon Gliders", land: "DreamWorks", type: "Mack Inverted Powered Coaster", offset: [0.0011, 0.0007] },
-          { id: "mg-6", name: "Kung Fu Panda: Unstoppable Awesomeness", land: "DreamWorks", type: "4D Motion Simulator", offset: [0.0005, 0.0009] },
-          { id: "mg-7", name: "The Green Hornet: High Speed Chase", land: "Columbia Pictures", type: "Bobsled Coaster", offset: [0.0007, -0.0011] },
-          { id: "mg-8", name: "Zombieland Blast-Off", land: "Columbia Pictures", type: "S&S Drop Tower", offset: [0.0010, -0.0008] },
-          { id: "mg-9", name: "Ghostbusters: Battle for New York", land: "Columbia Pictures", type: "Interactive Dark Ride", offset: [0.0003, -0.0009] },
-          { id: "mg-10", name: "Smurf Village Express", land: "Smurfs Village", type: "Family Coaster", offset: [-0.0004, -0.0006] }
+          { id: "mg-1", name: "Capitol Bullet Train", land: "Lionsgate", type: "Mack Half-Pipe Launch Coaster", offset: [-0.0012, 0.0010], mapPos: [78, 66] },
+          { id: "mg-2", name: "John Wick: Open Contract", land: "Lionsgate", type: "S&S 4D Free Spin Coaster", offset: [-0.0014, 0.0005], mapPos: [68, 76] },
+          { id: "mg-3", name: "Now You See Me: High Roller", land: "Lionsgate", type: "Maurer Spinning Coaster", offset: [-0.0010, 0.0003], mapPos: [82, 76] },
+          { id: "mg-4", name: "Madagascar Mad Pursuit!", land: "DreamWorks", type: "Gerstlauer Infinity Launch Coaster", offset: [0.0008, 0.0012], mapPos: [76, 24] },
+          { id: "mg-5", name: "Dragon Gliders", land: "DreamWorks", type: "Mack Inverted Powered Coaster", offset: [0.0011, 0.0007], mapPos: [65, 32] },
+          { id: "mg-6", name: "Kung Fu Panda: Unstoppable Awesomeness", land: "DreamWorks", type: "4D Motion Simulator", offset: [0.0005, 0.0009], mapPos: [78, 38] },
+          { id: "mg-7", name: "The Green Hornet: High Speed Chase", land: "Columbia Pictures", type: "Gerstlauer Bobsled Coaster", offset: [0.0007, -0.0011], mapPos: [22, 26] },
+          { id: "mg-8", name: "Zombieland Blast-Off", land: "Columbia Pictures", type: "S&S 58m Drop Tower", offset: [0.0010, -0.0008], mapPos: [34, 30] },
+          { id: "mg-9", name: "Ghostbusters: Battle for New York", land: "Columbia Pictures", type: "Interactive Dark Shooter", offset: [0.0003, -0.0009], mapPos: [25, 42] },
+          { id: "mg-10", name: "Smurf Village Express", land: "Smurfs Village", type: "Gerstlauer Family Coaster", offset: [-0.0004, -0.0006], mapPos: [30, 68] }
         ]
       },
       {
         id: "legoland-dubai",
         name: "LEGOLAND Dubai",
-        city: "Dubai Parks and Resorts",
+        shortName: "LEGOLAND Dubai",
+        city: "Dubai Parks and Resorts, UAE",
         region: "UAE",
         category: "core",
+        brandColor: "#eab308",
+        accentBg: "from-amber-950 via-zinc-950 to-zinc-950",
         coords: [24.9188, 55.0091],
         zoom: 17,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Legoland_Theme_Parks_around_the_World_as_of_2024.png?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Legoland_logo.svg?width=300",
+        logoFallback: "LL",
         officialMapUrl: "https://www.legoland.com/dubai/explore-legoland-digital-park-map/english/",
+        embedPdfUrl: null,
+        mapStyle: "loop-hub",
+        lands: [
+          { name: "Kingdoms", color: "#ef4444", cx: 70, cy: 30, rx: 18, ry: 18 },
+          { name: "Imagination", color: "#3b82f6", cx: 30, cy: 34, rx: 18, ry: 18 },
+          { name: "Adventure", color: "#f59e0b", cx: 30, cy: 70, rx: 18, ry: 18 },
+          { name: "Miniland", color: "#10b981", cx: 50, cy: 50, rx: 15, ry: 15 }
+        ],
         rides: [
-          { id: "ll-1", name: "The Dragon", land: "Kingdoms", type: "Steel Family Coaster", offset: [0.0009, 0.0007] },
-          { id: "ll-2", name: "Dragon's Apprentice", land: "Kingdoms", type: "Junior Coaster", offset: [0.0007, 0.0009] },
-          { id: "ll-3", name: "LEGO NINJAGO The Ride", land: "Imagination", type: "4D Interactive Dark Ride", offset: [0.0004, -0.0008] },
-          { id: "ll-4", name: "Submarine Adventure", land: "Adventure", type: "Aquarium Submarine Ride", offset: [-0.0008, 0.0006] },
-          { id: "ll-5", name: "Lost Kingdom Adventure", land: "Adventure", type: "Laser Dark Ride", offset: [-0.0006, 0.0009] },
-          { id: "ll-6", name: "LEGO Technic Twister", land: "Imagination", type: "Spinning Ride", offset: [0.0002, -0.0005] },
-          { id: "ll-7", name: "Miniland Indoor Dome", land: "Miniland", type: "LEGO Architectural Display", offset: [0.0000, 0.0000] }
+          { id: "ll-1", name: "The Dragon", land: "Kingdoms", type: "Zierer Steel Coaster", offset: [0.0009, 0.0007], mapPos: [72, 26] },
+          { id: "ll-2", name: "Dragon's Apprentice", land: "Kingdoms", type: "Zamperla Junior Coaster", offset: [0.0007, 0.0009], mapPos: [66, 36] },
+          { id: "ll-3", name: "LEGO NINJAGO The Ride", land: "Imagination", type: "Triotech 4D Gesture Ride", offset: [0.0004, -0.0008], mapPos: [26, 30] },
+          { id: "ll-4", name: "Submarine Adventure", land: "Adventure", type: "Live Marine Submarine Ride", offset: [-0.0008, 0.0006], mapPos: [28, 66] },
+          { id: "ll-5", name: "Lost Kingdom Adventure", land: "Adventure", type: "Interactive Laser Dark Ride", offset: [-0.0006, 0.0009], mapPos: [36, 74] },
+          { id: "ll-6", name: "LEGO Technic Twister", land: "Imagination", type: "Spinning Ride", offset: [0.0002, -0.0005], mapPos: [34, 40] },
+          { id: "ll-7", name: "Miniland Indoor Dome", land: "Miniland", type: "20M-Brick LEGO Cityscapes", offset: [0.0000, 0.0000], mapPos: [50, 50] }
         ]
       },
       {
         id: "img-worlds",
         name: "IMG Worlds of Adventure",
-        city: "City of Arabia, Dubai",
+        shortName: "IMG Worlds",
+        city: "City of Arabia, Dubai, UAE",
         region: "UAE",
         category: "core",
+        brandColor: "#e11d48",
+        accentBg: "from-rose-950 via-zinc-950 to-zinc-950",
         coords: [25.0818, 55.3183],
         zoom: 17,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/IMG_Worlds_of_Adventure_-_27352868657.jpg?width=900",
+        logoUrl: null,
+        logoFallback: "IMG",
         officialMapUrl: "https://www.imgworlds.com/park-map",
+        embedPdfUrl: null,
+        mapStyle: "indoor-hub",
+        lands: [
+          { name: "Lost Valley", color: "#10b981", cx: 74, cy: 34, rx: 20, ry: 20 },
+          { name: "Marvel", color: "#ef4444", cx: 28, cy: 34, rx: 19, ry: 20 },
+          { name: "Cartoon Network", color: "#06b6d4", cx: 28, cy: 70, rx: 19, ry: 18 },
+          { name: "IMG Boulevard", color: "#a855f7", cx: 68, cy: 70, rx: 18, ry: 17 }
+        ],
         rides: [
-          { id: "img-1", name: "The Velociraptor", land: "Lost Valley", type: "Mack Launch Coaster", offset: [0.0012, 0.0011] },
-          { id: "img-2", name: "Predator", land: "Lost Valley", type: "Gerstlauer Euro-Fighter", offset: [0.0008, 0.0007] },
-          { id: "img-3", name: "Forbidden Territory", land: "Lost Valley", type: "Dinosaur Dark Ride", offset: [0.0005, 0.0010] },
-          { id: "img-4", name: "Spider-Man Doc Ock's Revenge", land: "Marvel", type: "Mack Spinning Coaster", offset: [-0.0008, 0.0006] },
-          { id: "img-5", name: "Thor Thunder Spin", land: "Marvel", type: "Huss Top Spin", offset: [-0.0006, 0.0009] },
-          { id: "img-6", name: "Avengers Battle of Ultron", land: "Marvel", type: "3D Motion Dark Ride", offset: [-0.0010, 0.0003] },
-          { id: "img-7", name: "The Powerpuff Girls — Mojo Jojo's Robot Rampage!", land: "Cartoon Network", type: "Zamperla Air Race", offset: [-0.0005, -0.0008] },
-          { id: "img-8", name: "Ben 10 5D Hero Time", land: "Cartoon Network", type: "5D Theater", offset: [-0.0008, -0.0005] },
-          { id: "img-9", name: "The Haunted Hotel", land: "IMG Boulevard", type: "Walkthrough Maze", offset: [0.0002, -0.0006] }
+          { id: "img-1", name: "The Velociraptor", land: "Lost Valley", type: "Mack Blue Fire Launch Coaster", offset: [0.0012, 0.0011], mapPos: [78, 24] },
+          { id: "img-2", name: "Predator", land: "Lost Valley", type: "Gerstlauer Euro-Fighter · 97° Drop", offset: [0.0008, 0.0007], mapPos: [68, 36] },
+          { id: "img-3", name: "Forbidden Territory", land: "Lost Valley", type: "Animatronic Dinosaur Dark Ride", offset: [0.0005, 0.0010], mapPos: [78, 42] },
+          { id: "img-4", name: "Spider-Man Doc Ock's Revenge", land: "Marvel", type: "Mack Spinning Coaster", offset: [-0.0008, 0.0006], mapPos: [24, 28] },
+          { id: "img-5", name: "Thor Thunder Spin", land: "Marvel", type: "Huss Top Spin", offset: [-0.0006, 0.0009], mapPos: [34, 32] },
+          { id: "img-6", name: "Avengers Battle of Ultron", land: "Marvel", type: "3D Motion Dark Ride", offset: [-0.0010, 0.0003], mapPos: [24, 42] },
+          { id: "img-7", name: "The Powerpuff Girls — Mojo Jojo's Robot Rampage!", land: "Cartoon Network", type: "Zamperla Air Race", offset: [-0.0005, -0.0008], mapPos: [26, 66] },
+          { id: "img-8", name: "Ben 10 5D Hero Time", land: "Cartoon Network", type: "5D Sensory Theater", offset: [-0.0008, -0.0005], mapPos: [34, 74] },
+          { id: "img-9", name: "The Haunted Hotel", land: "IMG Boulevard", type: "Live-Actor Walkthrough Maze", offset: [0.0002, -0.0006], mapPos: [68, 70] }
         ]
       },
       {
         id: "uss-singapore",
         name: "Universal Studios Singapore",
-        city: "Sentosa Island, Singapore",
+        shortName: "Universal Singapore",
+        city: "Resorts World Sentosa, Singapore",
         region: "ASIA",
         category: "core",
+        brandColor: "#2563eb",
+        accentBg: "from-blue-950 via-zinc-950 to-zinc-950",
         coords: [1.2540, 103.8238],
         zoom: 17,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Universal_Studios_Singapore_(5559170576).jpg?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Universal_Studios_Lot_Logo.png?width=300",
+        logoFallback: "USS",
         officialMapUrl: "https://www.rwsentosa.com/en/play/universal-studios-singapore/park-map",
+        embedPdfUrl: "https://idbackpacker.com/wp-content/uploads/2023/07/Universal-Studios-Singapore-Park-Map-EN-PDF-Download.pdf",
+        mapStyle: "lagoon-loop",
+        lands: [
+          { name: "Sci-Fi City", color: "#3b82f6", cx: 78, cy: 52, rx: 16, ry: 20 },
+          { name: "Ancient Egypt", color: "#d97706", cx: 70, cy: 24, rx: 16, ry: 14 },
+          { name: "The Lost World", color: "#16a34a", cx: 42, cy: 20, rx: 18, ry: 14 },
+          { name: "Far Far Away", color: "#a855f7", cx: 22, cy: 36, rx: 16, ry: 16 },
+          { name: "Minion Land", color: "#eab308", cx: 24, cy: 68, rx: 16, ry: 15 },
+          { name: "New York", color: "#ef4444", cx: 64, cy: 78, rx: 16, ry: 13 }
+        ],
         rides: [
-          { id: "uss-1", name: "Battlestar Galactica: HUMAN", land: "Sci-Fi City", type: "Sit-Down Dueling Coaster", offset: [0.0002, 0.0012] },
-          { id: "uss-2", name: "Battlestar Galactica: CYLON", land: "Sci-Fi City", type: "Inverted Dueling Coaster", offset: [0.0004, 0.0013] },
-          { id: "uss-3", name: "TRANSFORMERS The Ride", land: "Sci-Fi City", type: "3D Motion Dark Ride", offset: [-0.0003, 0.0010] },
-          { id: "uss-4", name: "Revenge of the Mummy", land: "Ancient Egypt", type: "Indoor Launch Coaster", offset: [0.0010, 0.0005] },
-          { id: "uss-5", name: "Jurassic Park Rapids Adventure", land: "The Lost World", type: "River Rapids", offset: [0.0012, -0.0004] },
-          { id: "uss-6", name: "Canopy Flyer", land: "The Lost World", type: "Suspended Coaster", offset: [0.0010, -0.0007] },
-          { id: "uss-7", name: "Enchanted Airways", land: "Far Far Away", type: "Junior Coaster", offset: [0.0004, -0.0011] },
-          { id: "uss-8", name: "Puss In Boots' Giant Journey", land: "Far Far Away", type: "Suspended Coaster", offset: [0.0001, -0.0013] },
-          { id: "uss-9", name: "Despicable Me Minion Mayhem", land: "Minion Land", type: "Motion Simulator", offset: [-0.0008, -0.0008] },
-          { id: "uss-10", name: "Sesame Street Spaghetti Space Chase", land: "New York", type: "Suspended Dark Ride", offset: [-0.0009, 0.0004] }
+          { id: "uss-1", name: "Battlestar Galactica: HUMAN", land: "Sci-Fi City", type: "Vekoma Sit-Down Dueling Coaster", offset: [0.0002, 0.0012], mapPos: [82, 46] },
+          { id: "uss-2", name: "Battlestar Galactica: CYLON", land: "Sci-Fi City", type: "Vekoma Inverted Dueling Coaster", offset: [0.0004, 0.0013], mapPos: [82, 56] },
+          { id: "uss-3", name: "TRANSFORMERS The Ride: The Ultimate 3D Battle", land: "Sci-Fi City", type: "3D Roving Motion Dark Ride", offset: [-0.0003, 0.0010], mapPos: [72, 60] },
+          { id: "uss-4", name: "Revenge of the Mummy", land: "Ancient Egypt", type: "Premier Indoor Launch Coaster", offset: [0.0010, 0.0005], mapPos: [70, 24] },
+          { id: "uss-5", name: "Jurassic Park Rapids Adventure", land: "The Lost World", type: "Intamin River Rapids", offset: [0.0012, -0.0004], mapPos: [46, 18] },
+          { id: "uss-6", name: "Canopy Flyer", land: "The Lost World", type: "Setpoint Suspended Coaster", offset: [0.0010, -0.0007], mapPos: [36, 24] },
+          { id: "uss-7", name: "Enchanted Airways", land: "Far Far Away", type: "Vekoma Junior Coaster", offset: [0.0004, -0.0011], mapPos: [20, 32] },
+          { id: "uss-8", name: "Puss In Boots' Giant Journey", land: "Far Far Away", type: "Zamperla Suspended Coaster", offset: [0.0001, -0.0013], mapPos: [24, 42] },
+          { id: "uss-9", name: "Despicable Me Minion Mayhem", land: "Minion Land", type: "Illumination Simulator Ride", offset: [-0.0008, -0.0008], mapPos: [24, 68] },
+          { id: "uss-10", name: "Sesame Street Spaghetti Space Chase", land: "New York", type: "Mack Suspended Dark Ride", offset: [-0.0009, 0.0004], mapPos: [64, 78] }
         ]
       },
       {
         id: "usj-japan",
         name: "Universal Studios Japan",
-        city: "Osaka, Japan",
+        shortName: "Universal Japan",
+        city: "Konohana Ward, Osaka, Japan",
         region: "ASIA",
         category: "core",
+        brandColor: "#dc2626",
+        accentBg: "from-indigo-950 via-zinc-950 to-zinc-950",
         coords: [34.6654, 135.4323],
         zoom: 16,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Universal_Studios_Japan_13.JPG?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Universal_Studios_Lot_Logo.png?width=300",
+        logoFallback: "USJ",
         officialMapUrl: "https://www.usj.co.jp/web/en/us/service-guide/parkmap",
+        embedPdfUrl: null,
+        mapStyle: "lagoon-loop",
+        lands: [
+          { name: "Super Nintendo World", color: "#ef4444", cx: 80, cy: 26, rx: 16, ry: 16 },
+          { name: "Wizarding World", color: "#6366f1", cx: 78, cy: 56, rx: 16, ry: 16 },
+          { name: "Jurassic Park", color: "#16a34a", cx: 52, cy: 76, rx: 16, ry: 14 },
+          { name: "Hollywood", color: "#ec4899", cx: 26, cy: 36, rx: 17, ry: 18 },
+          { name: "Minion Park", color: "#eab308", cx: 26, cy: 74, rx: 15, ry: 14 },
+          { name: "Amity Village", color: "#0284c7", cx: 58, cy: 36, rx: 13, ry: 12 }
+        ],
         rides: [
-          { id: "usj-1", name: "Mario Kart: Koopa's Challenge", land: "Super Nintendo World", type: "AR Dark Ride", offset: [0.0018, 0.0015] },
-          { id: "usj-2", name: "Mine Cart Madness", land: "Super Nintendo World", type: "Boom Coaster", offset: [0.0022, 0.0018] },
-          { id: "usj-3", name: "Yoshi's Adventure", land: "Super Nintendo World", type: "Omnimover Ride", offset: [0.0015, 0.0012] },
-          { id: "usj-4", name: "Harry Potter and the Forbidden Journey", land: "Wizarding World", type: "KUKA Arm Dark Ride", offset: [0.0008, 0.0018] },
-          { id: "usj-5", name: "Flight of the Hippogriff", land: "Wizarding World", type: "Family Coaster", offset: [0.0005, 0.0015] },
-          { id: "usj-6", name: "The Flying Dinosaur", land: "Jurassic Park", type: "B&M Flying Coaster", offset: [-0.0014, 0.0008] },
-          { id: "usj-7", name: "Jurassic Park — The Ride", land: "Jurassic Park", type: "Water Flume", offset: [-0.0011, 0.0004] },
-          { id: "usj-8", name: "Hollywood Dream — The Ride", land: "Hollywood", type: "B&M Hyper Coaster", offset: [0.0006, -0.0012] },
-          { id: "usj-9", name: "Space Fantasy — The Ride", land: "Hollywood", type: "Indoor Spinning Coaster", offset: [0.0010, -0.0015] },
-          { id: "usj-10", name: "JAWS", land: "Amity Village", type: "Boat Tour", offset: [-0.0002, 0.0009] },
-          { id: "usj-11", name: "Despicable Me: Minion Mayhem", land: "Minion Park", type: "Motion Simulator", offset: [-0.0016, -0.0006] }
+          { id: "usj-1", name: "Mario Kart: Koopa's Challenge", land: "Super Nintendo World", type: "AR Interactive Dark Ride", offset: [0.0018, 0.0015], mapPos: [76, 22] },
+          { id: "usj-2", name: "Mine Cart Madness", land: "Super Nintendo World", type: "Donkey Kong Boom Coaster", offset: [0.0022, 0.0018], mapPos: [86, 26] },
+          { id: "usj-3", name: "Yoshi's Adventure", land: "Super Nintendo World", type: "Omnimover Scenic Ride", offset: [0.0015, 0.0012], mapPos: [78, 32] },
+          { id: "usj-4", name: "Harry Potter and the Forbidden Journey", land: "Wizarding World", type: "KUKA Arm Dark Ride", offset: [0.0008, 0.0018], mapPos: [82, 54] },
+          { id: "usj-5", name: "Flight of the Hippogriff", land: "Wizarding World", type: "Mack Family Coaster", offset: [0.0005, 0.0015], mapPos: [74, 62] },
+          { id: "usj-6", name: "The Flying Dinosaur", land: "Jurassic Park", type: "B&M Flying Coaster", offset: [-0.0014, 0.0008], mapPos: [54, 80] },
+          { id: "usj-7", name: "Jurassic Park — The Ride", land: "Jurassic Park", type: "25.9m Splashdown Flume", offset: [-0.0011, 0.0004], mapPos: [46, 72] },
+          { id: "usj-8", name: "Hollywood Dream — The Ride", land: "Hollywood", type: "B&M Hyper Coaster (& Backdrop)", offset: [0.0006, -0.0012], mapPos: [22, 32] },
+          { id: "usj-9", name: "Space Fantasy — The Ride", land: "Hollywood", type: "Mack Indoor Spinning Coaster", offset: [0.0010, -0.0015], mapPos: [28, 42] },
+          { id: "usj-10", name: "JAWS", land: "Amity Village", type: "Live-Skipper Boat Tour", offset: [-0.0002, 0.0009], mapPos: [58, 36] },
+          { id: "usj-11", name: "Despicable Me: Minion Mayhem", land: "Minion Park", type: "Dome Motion Simulator", offset: [-0.0016, -0.0006], mapPos: [26, 74] }
         ]
       },
       {
         id: "shanghai-disneyland",
         name: "Shanghai Disneyland",
-        city: "Pudong, Shanghai",
+        shortName: "Shanghai Disneyland",
+        city: "Pudong, Shanghai, China",
         region: "ASIA",
         category: "core",
+        brandColor: "#0ea5e9",
+        accentBg: "from-sky-950 via-zinc-950 to-zinc-950",
         coords: [31.1434, 121.6580],
         zoom: 16,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Shanghai_disneyland_castle.jpg?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Shanghai_Disneyland_logo.svg?width=300",
+        logoFallback: "SHDL",
         officialMapUrl: "https://www.shanghaidisneyresort.com/en/maps/",
+        embedPdfUrl: null,
+        mapStyle: "castle-hub",
+        lands: [
+          { name: "Tomorrowland", color: "#06b6d4", cx: 22, cy: 44, rx: 16, ry: 18 },
+          { name: "Toy Story Land", color: "#eab308", cx: 26, cy: 22, rx: 14, ry: 12 },
+          { name: "Fantasyland", color: "#a855f7", cx: 50, cy: 24, rx: 18, ry: 16 },
+          { name: "Zootopia", color: "#10b981", cx: 74, cy: 22, rx: 14, ry: 13 },
+          { name: "Treasure Cove", color: "#f97316", cx: 78, cy: 46, rx: 16, ry: 16 },
+          { name: "Adventure Isle", color: "#16a34a", cx: 74, cy: 74, rx: 16, ry: 15 }
+        ],
         rides: [
-          { id: "shdl-1", name: "TRON Lightcycle Power Run", land: "Tomorrowland", type: "Motorbike Launch Coaster", offset: [0.0012, -0.0022] },
-          { id: "shdl-2", name: "Pirates of the Caribbean: Battle for the Sunken Treasure", land: "Treasure Cove", type: "Magnetic Boat Dark Ride", offset: [0.0004, 0.0020] },
-          { id: "shdl-3", name: "Zootopia: Hot Pursuit", land: "Zootopia", type: "Trackless Dark Ride", offset: [0.0018, 0.0018] },
-          { id: "shdl-4", name: "Soaring Over the Horizon", land: "Adventure Isle", type: "Flying Theater", offset: [-0.0012, 0.0018] },
-          { id: "shdl-5", name: "Roaring Rapids", land: "Adventure Isle", type: "River Rapids", offset: [-0.0008, 0.0024] },
-          { id: "shdl-6", name: "Seven Dwarfs Mine Train", land: "Fantasyland", type: "Swinging Mine Coaster", offset: [0.0015, 0.0005] },
-          { id: "shdl-7", name: "Peter Pan's Flight", land: "Fantasyland", type: "Suspended Dark Ride", offset: [0.0014, -0.0006] },
-          { id: "shdl-8", name: "Voyage to the Crystal Grotto", land: "Fantasyland", type: "Scenic Boat Tour", offset: [0.0008, -0.0003] },
-          { id: "shdl-9", name: "Rex's Racer", land: "Toy Story Land", type: "Half-Pipe Shuttle Coaster", offset: [0.0022, -0.0014] },
-          { id: "shdl-10", name: "Buzz Lightyear Planet Rescue", land: "Tomorrowland", type: "Interactive Dark Shooter", offset: [0.0006, -0.0018] }
+          { id: "shdl-1", name: "TRON Lightcycle Power Run", land: "Tomorrowland", type: "Vekoma Motorbike Launch Coaster", offset: [0.0012, -0.0022], mapPos: [18, 40] },
+          { id: "shdl-2", name: "Pirates of the Caribbean: Battle for the Sunken Treasure", land: "Treasure Cove", type: "Magnetic Boat Dark Ride", offset: [0.0004, 0.0020], mapPos: [80, 46] },
+          { id: "shdl-3", name: "Zootopia: Hot Pursuit", land: "Zootopia", type: "Trackless Dark Ride", offset: [0.0018, 0.0018], mapPos: [74, 22] },
+          { id: "shdl-4", name: "Soaring Over the Horizon", land: "Adventure Isle", type: "IMAX Flying Theater", offset: [-0.0012, 0.0018], mapPos: [72, 76] },
+          { id: "shdl-5", name: "Roaring Rapids", land: "Adventure Isle", type: "Mountain River Rapids", offset: [-0.0008, 0.0024], mapPos: [80, 68] },
+          { id: "shdl-6", name: "Seven Dwarfs Mine Train", land: "Fantasyland", type: "Vekoma Swinging Mine Coaster", offset: [0.0015, 0.0005], mapPos: [56, 24] },
+          { id: "shdl-7", name: "Peter Pan's Flight", land: "Fantasyland", type: "Suspended Dark Ride", offset: [0.0014, -0.0006], mapPos: [44, 22] },
+          { id: "shdl-8", name: "Voyage to the Crystal Grotto", land: "Fantasyland", type: "Storybook Castle Boat Tour", offset: [0.0008, -0.0003], mapPos: [50, 34] },
+          { id: "shdl-9", name: "Rex's Racer", land: "Toy Story Land", type: "Intamin Half-Pipe Coaster", offset: [0.0022, -0.0014], mapPos: [26, 22] },
+          { id: "shdl-10", name: "Buzz Lightyear Planet Rescue", land: "Tomorrowland", type: "Interactive Laser Dark Ride", offset: [0.0006, -0.0018], mapPos: [26, 50] }
         ]
       },
       {
         id: "tokyo-disneyland",
         name: "Tokyo Disneyland",
-        city: "Urayasu, Tokyo",
+        shortName: "Tokyo Disneyland",
+        city: "Urayasu, Chiba (Tokyo), Japan",
         region: "ASIA",
         category: "core",
+        brandColor: "#ec4899",
+        accentBg: "from-pink-950 via-zinc-950 to-zinc-950",
         coords: [35.6329, 139.8804],
         zoom: 16,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Tokyo_Disneyland.JPG?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Tokyo_Disneyland_logo_(pink).svg?width=300",
+        logoFallback: "TDL",
         officialMapUrl: "https://www.tokyodisneyresort.jp/en/tdl/map.html",
+        embedPdfUrl: null,
+        mapStyle: "castle-hub",
+        lands: [
+          { name: "Fantasyland", color: "#ec4899", cx: 52, cy: 24, rx: 20, ry: 16 },
+          { name: "Tomorrowland", color: "#06b6d4", cx: 76, cy: 56, rx: 17, ry: 20 },
+          { name: "Westernland", color: "#d97706", cx: 24, cy: 40, rx: 16, ry: 16 },
+          { name: "Critter Country", color: "#84cc16", cx: 26, cy: 20, rx: 13, ry: 12 },
+          { name: "Adventureland", color: "#16a34a", cx: 28, cy: 70, rx: 17, ry: 16 }
+        ],
         rides: [
-          { id: "tdl-1", name: "Enchanted Tale of Beauty and the Beast", land: "Fantasyland", type: "Trackless Dark Ride", offset: [0.0012, 0.0016] },
-          { id: "tdl-2", name: "Pooh's Hunny Hunt", land: "Fantasyland", type: "Trackless Dark Ride", offset: [0.0016, 0.0011] },
-          { id: "tdl-3", name: "Haunted Mansion", land: "Fantasyland", type: "Omnimover Dark Ride", offset: [0.0015, -0.0008] },
-          { id: "tdl-4", name: "Splash Mountain", land: "Critter Country", type: "Log Flume", offset: [0.0018, -0.0018] },
-          { id: "tdl-5", name: "Big Thunder Mountain", land: "Westernland", type: "Mine Train Coaster", offset: [0.0006, -0.0020] },
-          { id: "tdl-6", name: "Monsters, Inc. Ride & Go Seek!", land: "Tomorrowland", type: "Interactive Dark Ride", offset: [-0.0010, 0.0014] },
-          { id: "tdl-7", name: "The Happy Ride with Baymax", land: "Tomorrowland", type: "Whip Ride", offset: [-0.0002, 0.0018] },
-          { id: "tdl-8", name: "Star Tours: The Adventures Continue", land: "Tomorrowland", type: "3D Flight Simulator", offset: [-0.0008, 0.0010] },
-          { id: "tdl-9", name: "Pirates of the Caribbean", land: "Adventureland", type: "Boat Dark Ride", offset: [-0.0012, -0.0010] },
-          { id: "tdl-10", name: "Jungle Cruise: Wildlife Expeditions", land: "Adventureland", type: "River Boat Tour", offset: [-0.0006, -0.0015] }
+          { id: "tdl-1", name: "Enchanted Tale of Beauty and the Beast", land: "Fantasyland", type: "Trackless Musical Dark Ride", offset: [0.0012, 0.0016], mapPos: [62, 24] },
+          { id: "tdl-2", name: "Pooh's Hunny Hunt", land: "Fantasyland", type: "Trackless Dark Ride", offset: [0.0016, 0.0011], mapPos: [54, 18] },
+          { id: "tdl-3", name: "Haunted Mansion", land: "Fantasyland", type: "Omnimover Dark Ride", offset: [0.0015, -0.0008], mapPos: [40, 22] },
+          { id: "tdl-4", name: "Splash Mountain", land: "Critter Country", type: "Log Flume Dark Ride", offset: [0.0018, -0.0018], mapPos: [26, 20] },
+          { id: "tdl-5", name: "Big Thunder Mountain", land: "Westernland", type: "Mine Train Coaster", offset: [0.0006, -0.0020], mapPos: [22, 40] },
+          { id: "tdl-6", name: "Monsters, Inc. Ride & Go Seek!", land: "Tomorrowland", type: "Flashlight Dark Ride", offset: [-0.0010, 0.0014], mapPos: [76, 66] },
+          { id: "tdl-7", name: "The Happy Ride with Baymax", land: "Tomorrowland", type: "Musical Whip Ride", offset: [-0.0002, 0.0018], mapPos: [78, 46] },
+          { id: "tdl-8", name: "Star Tours: The Adventures Continue", land: "Tomorrowland", type: "3D Flight Simulator", offset: [-0.0008, 0.0010], mapPos: [70, 56] },
+          { id: "tdl-9", name: "Pirates of the Caribbean", land: "Adventureland", type: "Boat Dark Ride", offset: [-0.0012, -0.0010], mapPos: [28, 74] },
+          { id: "tdl-10", name: "Jungle Cruise: Wildlife Expeditions", land: "Adventureland", type: "River Expedition Boat", offset: [-0.0006, -0.0015], mapPos: [24, 62] }
         ]
       },
       {
         id: "canadas-wonderland",
         name: "Canada's Wonderland",
-        city: "Vaughan, Toronto",
+        shortName: "Canada's Wonderland",
+        city: "Vaughan (Toronto), Ontario, Canada",
         region: "NA",
         category: "core",
+        brandColor: "#dc2626",
+        accentBg: "from-red-950 via-zinc-950 to-zinc-950",
         coords: [43.8430, -79.5390],
         zoom: 16,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Leviathan_roller_coaster_near_main_entrance.jpg?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Canada%27s_Wonderland_logo.svg?width=300",
+        logoFallback: "CW",
         officialMapUrl: "https://www.canadaswonderland.com/explore-the-park/park-map",
+        embedPdfUrl: "https://deeparrival.com/wp-content/uploads/2026/07/canadas-wonderland-map-2026-web.pdf",
+        mapStyle: "mountain-hub",
+        lands: [
+          { name: "Medieval Faire", color: "#06b6d4", cx: 26, cy: 28, rx: 18, ry: 18 },
+          { name: "Wonder Mountain", color: "#a855f7", cx: 50, cy: 48, rx: 15, ry: 15 },
+          { name: "Frontier Canada", color: "#16a34a", cx: 52, cy: 76, rx: 20, ry: 15 },
+          { name: "Action Zone", color: "#f97316", cx: 78, cy: 56, rx: 17, ry: 20 }
+        ],
         rides: [
-          { id: "cw-1", name: "Leviathan", land: "Medieval Faire", type: "B&M Giga Coaster", offset: [0.0024, -0.0018] },
-          { id: "cw-2", name: "Behemoth", land: "Action Zone", type: "B&M Hyper Coaster", offset: [-0.0025, 0.0012] },
-          { id: "cw-3", name: "Yukon Striker", land: "Frontier Canada", type: "B&M Dive Coaster", offset: [-0.0018, -0.0015] },
-          { id: "cw-4", name: "AlpenFury", land: "Wonder Mountain", type: "Premier Dual-Launch Coaster", offset: [0.0002, -0.0003] },
-          { id: "cw-5", name: "Vortex", land: "Frontier Canada", type: "Arrow Suspended Coaster", offset: [-0.0006, -0.0008] },
-          { id: "cw-6", name: "Tundra Twister", land: "Frontier Canada", type: "Mondial 360 Swing", offset: [-0.0014, -0.0011] },
-          { id: "cw-7", name: "Mighty Canadian Minebuster", land: "Frontier Canada", type: "Wooden Coaster", offset: [-0.0022, -0.0006] },
-          { id: "cw-8", name: "Wilde Beast", land: "Medieval Faire", type: "Wooden Coaster", offset: [0.0020, -0.0005] },
-          { id: "cw-9", name: "Wonder Mountain's Guardian", land: "International Street", type: "4D Interactive Coaster", offset: [0.0004, -0.0001] },
-          { id: "cw-10", name: "Sledge Hammer", land: "Action Zone", type: "Huss Giant Jumper", offset: [-0.0020, 0.0008] },
-          { id: "cw-11", name: "Back Lot Stunt Coaster", land: "Action Zone", type: "Premier Launch Coaster", offset: [-0.0026, 0.0004] }
+          { id: "cw-1", name: "Leviathan", land: "Medieval Faire", type: "B&M Giga Coaster · 306 ft / 148 km/h", offset: [0.0024, -0.0018], mapPos: [22, 22] },
+          { id: "cw-2", name: "Behemoth", land: "Action Zone", type: "B&M Hyper Coaster · 230 ft", offset: [-0.0025, 0.0012], mapPos: [82, 64] },
+          { id: "cw-3", name: "Yukon Striker", land: "Frontier Canada", type: "B&M Dive Coaster · 245 ft 90° Drop", offset: [-0.0018, -0.0015], mapPos: [44, 78] },
+          { id: "cw-4", name: "AlpenFury", land: "Wonder Mountain", type: "Premier Dual-Launch · 9 Inversions", offset: [0.0002, -0.0003], mapPos: [50, 44] },
+          { id: "cw-5", name: "Vortex", land: "Frontier Canada", type: "Arrow Suspended Coaster", offset: [-0.0006, -0.0008], mapPos: [44, 62] },
+          { id: "cw-6", name: "Tundra Twister", land: "Frontier Canada", type: "Mondial Avalanche 360 Swing", offset: [-0.0014, -0.0011], mapPos: [54, 72] },
+          { id: "cw-7", name: "Mighty Canadian Minebuster", land: "Frontier Canada", type: "Classic Out-&-Back Wooden Coaster", offset: [-0.0022, -0.0006], mapPos: [62, 80] },
+          { id: "cw-8", name: "Wilde Beast", land: "Medieval Faire", type: "Classic Wooden Coaster", offset: [0.0020, -0.0005], mapPos: [32, 32] },
+          { id: "cw-9", name: "Wonder Mountain's Guardian", land: "Wonder Mountain", type: "4D Interactive Coaster Dark Ride", offset: [0.0004, -0.0001], mapPos: [54, 52] },
+          { id: "cw-10", name: "Sledge Hammer", land: "Action Zone", type: "Huss Giant Jumper", offset: [-0.0020, 0.0008], mapPos: [74, 52] },
+          { id: "cw-11", name: "Back Lot Stunt Coaster", land: "Action Zone", type: "Premier Launch Coaster", offset: [-0.0026, 0.0004], mapPos: [78, 42] }
         ]
       },
+      // 5 Extended Studios, Aquariums & Villages
       {
         id: "wb-studio-london",
         name: "Warner Bros. Studio Tour London",
-        city: "Leavesden, London",
+        shortName: "WB Studio Tour London",
+        city: "Leavesden, Watford, UK",
         region: "UK",
         category: "adjacent",
+        brandColor: "#d97706",
+        accentBg: "from-amber-950 via-zinc-950 to-zinc-950",
         coords: [51.6906, -0.4180],
         zoom: 17,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Constructing_Warner_Bros._Studio_Tour.jpg?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Warner_Bros._logo_2023.svg?width=300",
+        logoFallback: "HP",
         officialMapUrl: "https://www.wbstudiotour.co.uk/plan-your-visit/studio-tour-map/",
+        embedPdfUrl: null,
+        mapStyle: "indoor-hub",
+        lands: [
+          { name: "Soundstage J", color: "#f59e0b", cx: 32, cy: 45, rx: 18, ry: 22 },
+          { name: "Backlot Stage", color: "#10b981", cx: 68, cy: 45, rx: 18, ry: 22 }
+        ],
         rides: [
-          { id: "hp-1", name: "The Great Hall & Forbidden Forest", land: "Soundstage J", type: "Set Walkthrough", offset: [0.0004, -0.0005] },
-          { id: "hp-2", name: "Platform 9 3/4 & Hogwarts Express", land: "Backlot", type: "Locomotive Exhibit", offset: [-0.0005, 0.0003] },
-          { id: "hp-3", name: "Gringotts Bank & Diagon Alley", land: "Soundstage", type: "Set Walkthrough", offset: [0.0002, 0.0006] }
+          { id: "hp-1", name: "The Great Hall & Forbidden Forest", land: "Soundstage J", type: "Original Film Set Walkthrough", offset: [0.0004, -0.0005], mapPos: [28, 38] },
+          { id: "hp-2", name: "Platform 9 3/4 & Hogwarts Express", land: "Backlot Stage", type: "Steam Locomotive Exhibit", offset: [-0.0005, 0.0003], mapPos: [68, 45] },
+          { id: "hp-3", name: "Gringotts Wizarding Bank & Diagon Alley", land: "Soundstage J", type: "Street Set Walkthrough", offset: [0.0002, 0.0006], mapPos: [36, 56] }
         ]
       },
       {
         id: "global-village-dubai",
         name: "Global Village Dubai",
-        city: "Dubailand, Dubai",
+        shortName: "Global Village",
+        city: "Dubailand, Dubai, UAE",
         region: "UAE",
         category: "adjacent",
+        brandColor: "#db2777",
+        accentBg: "from-fuchsia-950 via-zinc-950 to-zinc-950",
         coords: [25.0695, 55.3075],
         zoom: 16,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Motiongate_Dubai_-_27896293658.jpg?width=900",
+        logoUrl: null,
+        logoFallback: "GV",
         officialMapUrl: "https://www.globalvillage.ae/en/park-map",
+        embedPdfUrl: null,
+        mapStyle: "loop-hub",
+        lands: [
+          { name: "Carnaval Funfair", color: "#ec4899", cx: 70, cy: 40, rx: 20, ry: 22 },
+          { name: "World Pavilions", color: "#eab308", cx: 35, cy: 52, rx: 22, ry: 22 }
+        ],
         rides: [
-          { id: "gv-1", name: "Honoloop", land: "Carnaval", type: "Spinning Coaster", offset: [0.0012, 0.0014] },
-          { id: "gv-2", name: "Shanghigh", land: "Carnaval", type: "85m Star Flyer", offset: [0.0009, 0.0018] },
-          { id: "gv-3", name: "Wheel of the World", land: "Carnaval", type: "Observation Wheel", offset: [0.0005, 0.0012] },
-          { id: "gv-4", name: "Country Pavilions Walk", land: "Promenade", type: "Cultural Pavilions", offset: [-0.0005, -0.0008] }
+          { id: "gv-1", name: "Honoloop", land: "Carnaval Funfair", type: "Spinning Coaster", offset: [0.0012, 0.0014], mapPos: [72, 32] },
+          { id: "gv-2", name: "Shanghigh", land: "Carnaval Funfair", type: "85m Star Flyer Swing", offset: [0.0009, 0.0018], mapPos: [66, 46] },
+          { id: "gv-3", name: "Wheel of the World", land: "Carnaval Funfair", type: "60m Observation Wheel", offset: [0.0005, 0.0012], mapPos: [76, 52] },
+          { id: "gv-4", name: "Country Pavilions Promenade", land: "World Pavilions", type: "90+ Cultural Pavilions", offset: [-0.0005, -0.0008], mapPos: [35, 52] }
         ]
       },
       {
         id: "kidzania-dubai",
         name: "KidZania Dubai",
-        city: "The Dubai Mall, Dubai",
+        shortName: "KidZania Dubai",
+        city: "The Dubai Mall, Downtown Dubai",
         region: "UAE",
         category: "adjacent",
+        brandColor: "#e11d48",
+        accentBg: "from-rose-950 via-zinc-950 to-zinc-950",
         coords: [25.1972, 55.2796],
         zoom: 18,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Kidzania.JPG?width=900",
+        logoUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/KidZania_logo.svg?width=300",
+        logoFallback: "KZ",
         officialMapUrl: "https://dubai.kidzania.com/en-ae",
+        embedPdfUrl: null,
+        mapStyle: "indoor-hub",
+        lands: [
+          { name: "Airport Terminal", color: "#ef4444", cx: 35, cy: 48, rx: 18, ry: 20 },
+          { name: "City Streets", color: "#3b82f6", cx: 68, cy: 48, rx: 18, ry: 20 }
+        ],
         rides: [
-          { id: "kz-1", name: "Emirates Aviation Academy", land: "Airport Terminal", type: "Flight Simulator", offset: [0.0002, 0.0002] },
-          { id: "kz-2", name: "Fire Station & Emergency Rescue", land: "City Streets", type: "Interactive Roleplay", offset: [-0.0002, 0.0001] }
+          { id: "kz-1", name: "Emirates Aviation Academy", land: "Airport Terminal", type: "Fuselage Flight Simulator", offset: [0.0002, 0.0002], mapPos: [35, 48] },
+          { id: "kz-2", name: "Fire Station & Emergency Rescue", land: "City Streets", type: "Interactive Roleplay City", offset: [-0.0002, 0.0001], mapPos: [68, 48] }
         ]
       },
       {
         id: "ripleys-aquarium-canada",
         name: "Ripley's Aquarium of Canada",
-        city: "Downtown Toronto",
+        shortName: "Ripley's Aquarium",
+        city: "Downtown Toronto, Ontario, Canada",
         region: "NA",
         category: "adjacent",
+        brandColor: "#0284c7",
+        accentBg: "from-cyan-950 via-zinc-950 to-zinc-950",
         coords: [43.6424, -79.3860],
         zoom: 18,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Ripley%27s_Aquarium_of_Canada,_Toronto,_Ontario_(29969189246).jpg?width=900",
+        logoUrl: null,
+        logoFallback: "RA",
         officialMapUrl: "https://www.ripleys.com/attractions/ripleys-aquarium-of-canada",
+        embedPdfUrl: null,
+        mapStyle: "ocean-realms",
+        lands: [
+          { name: "Lower Level", color: "#0284c7", cx: 38, cy: 50, rx: 20, ry: 20 },
+          { name: "Main Gallery", color: "#06b6d4", cx: 68, cy: 50, rx: 18, ry: 20 }
+        ],
         rides: [
-          { id: "ra-1", name: "Dangerous Lagoon Moving Tunnel", land: "Lower Level", type: "Shark Tunnel", offset: [0.0002, -0.0002] },
-          { id: "ra-2", name: "Planet Jellies & Ray Bay", land: "Main Gallery", type: "Marine Habitat", offset: [-0.0002, 0.0002] }
+          { id: "ra-1", name: "Dangerous Lagoon Moving Sidewalk Tunnel", land: "Lower Level", type: "Underwater Shark Tunnel", offset: [0.0002, -0.0002], mapPos: [38, 50] },
+          { id: "ra-2", name: "Planet Jellies & Ray Bay", land: "Main Gallery", type: "Marine Habitat Gallery", offset: [-0.0002, 0.0002], mapPos: [68, 50] }
         ]
       },
       {
         id: "dubai-aquarium-zoo",
         name: "Dubai Aquarium & Underwater Zoo",
-        city: "The Dubai Mall, Dubai",
+        shortName: "Dubai Aquarium",
+        city: "The Dubai Mall, Downtown Dubai",
         region: "UAE",
         category: "adjacent",
+        brandColor: "#0ea5e9",
+        accentBg: "from-sky-950 via-zinc-950 to-zinc-950",
         coords: [25.1975, 55.2785],
         zoom: 18,
+        heroImg: "https://commons.wikimedia.org/wiki/Special:FilePath/Dubai_Aquarium.jpg?width=900",
+        logoUrl: null,
+        logoFallback: "DA",
         officialMapUrl: "https://www.thedubaiaquarium.com/plan-your-visit/location-map/",
+        embedPdfUrl: null,
+        mapStyle: "ocean-realms",
+        lands: [
+          { name: "Ground Level Tunnel", color: "#0284c7", cx: 36, cy: 50, rx: 18, ry: 20 },
+          { name: "Level 2 Underwater Zoo", color: "#10b981", cx: 68, cy: 50, rx: 18, ry: 20 }
+        ],
         rides: [
-          { id: "da-1", name: "48m Shark Walkthrough Tunnel", land: "Ground Level", type: "Acrylic Tunnel", offset: [0.0001, -0.0001] },
-          { id: "da-2", name: "King Croc & Underwater Zoo", land: "Level 2", type: "Marine Habitat", offset: [-0.0001, 0.0002] }
+          { id: "da-1", name: "48-Metre Shark Walkthrough Tunnel", land: "Ground Level Tunnel", type: "270-Degree Acrylic Tunnel", offset: [0.0001, -0.0001], mapPos: [36, 50] },
+          { id: "da-2", name: "King Croc & Underwater Zoo", land: "Level 2 Underwater Zoo", type: "Marine & Reptile Habitat", offset: [-0.0001, 0.0002], mapPos: [68, 50] }
         ]
       }
     ];
 
-    // Persistent State
+    // Persistent LocalStorage State
     let riddenRides = JSON.parse(localStorage.getItem("ctc_ridden_rides") || "{}");
     let customRides = JSON.parse(localStorage.getItem("ctc_custom_rides") || "{}");
     let currentCategoryFilter = "core";
     let currentRegionFilter = "ALL";
     let currentRideStatusFilter = "all";
     let activeParkId = null;
-    let currentBasemapMode = "canvas";
+    let activeParkMapView = "illustrated"; // 'illustrated' | 'satellite' | 'official'
 
-    // Initialize Leaflet with Key-Free Esri ArcGIS Public REST MapServer Tiles
+    // Initialize Leaflet Map (Key-Free Esri ArcGIS REST MapServer Tiles)
     const map = L.map("map", { zoomControl: false, attributionControl: false }).setView([25, 45], 3);
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
     const tileLayers = {
       darkCanvas: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16 }),
       lightCanvas: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16 }),
-      parkTopo: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19 }),
-      satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19 })
+      satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19 }),
+      topo: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19 })
     };
 
     const parkMarkersGroup = L.layerGroup().addTo(map);
     const rideMarkersGroup = L.layerGroup().addTo(map);
+    const landPolygonsGroup = L.layerGroup().addTo(map);
 
     function isDarkMode() {
       return document.documentElement.classList.contains("dark");
     }
 
-    function applyBasemapLayer() {
+    function applyWorldBasemap() {
       Object.values(tileLayers).forEach(l => map.removeLayer(l));
-      if (currentBasemapMode === "canvas") {
-        (isDarkMode() ? tileLayers.darkCanvas : tileLayers.lightCanvas).addTo(map);
-      } else if (currentBasemapMode === "park") {
-        tileLayers.parkTopo.addTo(map);
-      } else {
+      if (activeParkId && activeParkMapView === "satellite") {
         tileLayers.satellite.addTo(map);
+      } else {
+        (isDarkMode() ? tileLayers.darkCanvas : tileLayers.lightCanvas).addTo(map);
       }
     }
 
@@ -635,7 +934,7 @@
       const dark = html.classList.contains("dark");
       localStorage.setItem("ctc_theme", dark ? "dark" : "light");
       document.getElementById("theme-icon").className = dark ? "ph ph-sun text-base" : "ph ph-moon text-base";
-      applyBasemapLayer();
+      applyWorldBasemap();
     }
 
     (function initTheme() {
@@ -644,19 +943,15 @@
         document.documentElement.classList.remove("dark");
         document.getElementById("theme-icon").className = "ph ph-moon text-base";
       }
-      applyBasemapLayer();
+      applyWorldBasemap();
     })();
 
-    function switchBasemap(mode) {
-      currentBasemapMode = mode;
-      applyBasemapLayer();
-      ["canvas", "park", "satellite"].forEach(m => {
-        const btn = document.getElementById(`base-${m}`);
-        if (!btn) return;
-        btn.className = m === mode
-          ? "px-2.5 py-1 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 transition"
-          : "px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition";
-      });
+    // Helper: Render Park Logo with Automatic Brand Crest Fallback
+    function getLogoHtml(park, sizeClass = "w-full h-full object-contain") {
+      if (park.logoUrl) {
+        return `<img src="${park.logoUrl}" alt="${park.shortName}" class="${sizeClass}" onerror="this.outerHTML='<span class=\\'font-mono font-bold text-xs text-zinc-900\\'>${park.logoFallback}</span>'" />`;
+      }
+      return `<span class="font-mono font-bold text-xs tracking-tighter" style="color:${park.brandColor}">${park.logoFallback}</span>`;
     }
 
     function getAllRidesForPark(park) {
@@ -718,6 +1013,7 @@
       document.getElementById("stat-rides").textContent = `${completedRides} / ${totalRides}`;
     }
 
+    // World Map Markers with Park Logos & Ride Badges
     function renderGlobalMarkers() {
       parkMarkersGroup.clearLayers();
       if (activeParkId) return;
@@ -727,18 +1023,21 @@
         const riddenCount = rides.filter(r => riddenRides[r.id]).length;
 
         const markerHtml = `
-          <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/95 dark:bg-zinc-100/95 text-white dark:text-zinc-950 border border-white/20 dark:border-zinc-900/20 shadow-md text-[11px] font-medium whitespace-nowrap hover:scale-105 transition-transform">
-            <span class="w-1.5 h-1.5 rounded-full ${riddenCount > 0 ? 'bg-emerald-400 dark:bg-emerald-600' : 'bg-accent-500'}"></span>
-            <span>${park.name}</span>
-            <span class="font-mono text-[10px] opacity-70 tabular-nums">${riddenCount}/${rides.length}</span>
+          <div class="group inline-flex items-center gap-2 p-1 pr-2.5 rounded-xl bg-zinc-950/95 text-white border border-white/20 shadow-xl whitespace-nowrap hover:scale-105 transition-transform">
+            <div class="w-6 h-6 rounded-lg bg-white p-0.5 flex items-center justify-center shrink-0 overflow-hidden">
+              ${getLogoHtml(park, "w-full h-full object-contain")}
+            </div>
+            <span class="text-[11px] font-semibold tracking-tight">${park.shortName}</span>
+            <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-zinc-200 tabular-nums">${riddenCount}/${rides.length}</span>
           </div>
         `;
-        const icon = L.divIcon({ html: markerHtml, className: "", iconAnchor: [50, 14] });
+        const icon = L.divIcon({ html: markerHtml, className: "", iconAnchor: [70, 16] });
         const marker = L.marker(park.coords, { icon }).addTo(parkMarkersGroup);
         marker.on("click", () => selectPark(park.id));
       });
     }
 
+    // Rich Visual Park Cards in Sidebar Directory
     function renderParkDirectory() {
       const query = document.getElementById("park-search").value.trim().toLowerCase();
       document.getElementById("clear-search-btn").classList.toggle("hidden", !query);
@@ -750,7 +1049,7 @@
         const rides = getAllRidesForPark(p);
         return p.name.toLowerCase().includes(query) ||
                p.city.toLowerCase().includes(query) ||
-               rides.some(r => r.name.toLowerCase().includes(query));
+               rides.some(r => r.name.toLowerCase().includes(query) || r.land.toLowerCase().includes(query));
       });
 
       filtered.forEach(park => {
@@ -758,33 +1057,51 @@
         const riddenCount = rides.filter(r => riddenRides[r.id]).length;
         const pct = rides.length ? Math.round((riddenCount / rides.length) * 100) : 0;
 
-        const row = document.createElement("div");
-        row.className = "group relative px-4 py-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-900/60 cursor-pointer transition-colors";
-        row.onclick = () => selectPark(park.id);
+        const card = document.createElement("div");
+        card.className = "group relative rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/90 bg-zinc-900 cursor-pointer shadow-sm hover:shadow-xl hover:border-zinc-400 dark:hover:border-zinc-600 transition-all";
+        card.onclick = () => selectPark(park.id);
 
-        row.innerHTML = `
-          <div class="flex items-center justify-between gap-3">
-            <div class="min-w-0">
-              <h3 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate group-hover:text-accent-600 dark:group-hover:text-accent-400 transition-colors">
-                ${park.name}
-              </h3>
-              <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">${park.city}</p>
+        card.innerHTML = `
+          <!-- Park Hero Photograph -->
+          <div class="relative h-28 w-full overflow-hidden bg-gradient-to-br ${park.accentBg}">
+            <img src="${park.heroImg}" alt="${park.name}" loading="lazy"
+              class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
+              onerror="this.style.display='none'" />
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/45 to-transparent"></div>
+
+            <!-- Top Right Ride Credit Pill -->
+            <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-zinc-950/80 backdrop-blur-md border border-white/15 font-mono text-[11px] text-white tabular-nums">
+              <i class="ph-fill ph-ticket text-accent-400 text-xs"></i>
+              <span>${riddenCount}/${rides.length}</span>
             </div>
-            <div class="shrink-0 flex items-center gap-2">
-              <span class="font-mono text-xs tabular-nums ${riddenCount === rides.length ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-zinc-500 dark:text-zinc-400'}">
-                ${riddenCount}/${rides.length}
-              </span>
-              <i class="ph ph-caret-right text-xs text-zinc-400 group-hover:translate-x-0.5 transition-transform"></i>
+
+            <!-- Bottom Left Park Logo + Title -->
+            <div class="absolute bottom-2.5 left-3 right-3 flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-white p-1 shrink-0 shadow-md flex items-center justify-center overflow-hidden">
+                ${getLogoHtml(park)}
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-xs font-bold text-white truncate group-hover:text-accent-400 transition-colors">
+                  ${park.name}
+                </h3>
+                <p class="text-[11px] text-zinc-300 truncate">${park.city}</p>
+              </div>
+              <div class="shrink-0 w-7 h-7 rounded-lg bg-white/10 group-hover:bg-accent-600 text-white flex items-center justify-center transition-colors">
+                <i class="ph-bold ph-map-trifold text-xs"></i>
+              </div>
             </div>
           </div>
-          <div class="mt-2.5 w-full h-[2px] bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
-            <div class="h-full bg-accent-600 transition-all duration-300" style="width: ${pct}%"></div>
+
+          <!-- Progress Strip -->
+          <div class="w-full h-1 bg-zinc-800 overflow-hidden">
+            <div class="h-full transition-all duration-300" style="width: ${pct}%; background-color: ${park.brandColor}"></div>
           </div>
         `;
-        container.appendChild(row);
+        container.appendChild(card);
       });
     }
 
+    // Selecting a Park Opens Its Specific Park Map & Ride Checklist
     function selectPark(parkId) {
       activeParkId = parkId;
       const park = PARKS_DATA.find(p => p.id === parkId);
@@ -794,18 +1111,263 @@
       document.getElementById("view-park-detail").classList.remove("hidden");
       document.getElementById("world-reset-btn").classList.remove("hidden");
       document.getElementById("world-reset-btn").classList.add("inline-flex");
-      document.getElementById("header-context").textContent = park.name;
+      document.getElementById("park-map-toolbar").classList.remove("hidden");
+      document.getElementById("header-context").textContent = `${park.name} — Park Map`;
 
-      parkMarkersGroup.clearLayers();
-      switchBasemap("park");
-      map.flyTo(park.coords, park.zoom, { duration: 1.1 });
-
+      // Populate Hero & Logo in Sidebar
+      const heroImg = document.getElementById("detail-hero-img");
+      heroImg.style.display = "block";
+      heroImg.src = park.heroImg;
+      document.getElementById("detail-logo-box").innerHTML = getLogoHtml(park);
+      document.getElementById("detail-park-tag").textContent = park.category === "core" ? `${park.lands.length} Themed Lands` : "Featured Experience";
       document.getElementById("detail-title").textContent = park.name;
       document.getElementById("detail-location").textContent = park.city;
       document.getElementById("detail-official-map-link").href = park.officialMapUrl;
 
+      parkMarkersGroup.clearLayers();
       renderParkDetailRides(park);
       renderParkRideMarkers(park);
+
+      // Open the Park's Specific Illustrated Map by default
+      setParkMapView(activeParkMapView);
+    }
+
+    // Switch Between the 3 Park Map Modes: Illustrated Park Map | Aerial Coaster Map | Official Map Brochure
+    function setParkMapView(mode) {
+      activeParkMapView = mode;
+      const park = PARKS_DATA.find(p => p.id === activeParkId);
+      if (!park) return;
+
+      ["illustrated", "satellite", "official"].forEach(m => {
+        const btn = document.getElementById(`pmode-${m}`);
+        btn.className = m === mode
+          ? "flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-600 text-white font-semibold transition"
+          : "flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:text-white transition";
+      });
+
+      const illusStage = document.getElementById("illustrated-map-stage");
+      const brochureStage = document.getElementById("official-brochure-stage");
+
+      if (mode === "illustrated") {
+        illusStage.classList.remove("hidden");
+        brochureStage.classList.add("hidden");
+        renderIllustratedParkMap(park);
+      } else if (mode === "satellite") {
+        illusStage.classList.add("hidden");
+        brochureStage.classList.add("hidden");
+        applyWorldBasemap();
+        map.invalidateSize();
+        map.flyTo(park.coords, park.zoom, { duration: 0.9 });
+      } else if (mode === "official") {
+        illusStage.classList.add("hidden");
+        brochureStage.classList.remove("hidden");
+        renderOfficialBrochureStage(park);
+      }
+    }
+
+    // Render Bespoke Illustrated Theme Park Map with Themed Lands, Architecture & Interactive Ride Pins
+    function renderIllustratedParkMap(park) {
+      const svgContainer = document.getElementById("illustrated-svg-layer");
+      const pinsContainer = document.getElementById("illustrated-pins-layer");
+      const legendContainer = document.getElementById("illustrated-lands-legend");
+
+      // Architectural Background Elements Based on Park Layout Style
+      let centerpieceSvg = "";
+      if (park.mapStyle === "tri-dome") {
+        // Ferrari World Iconic Red Tri-Wing Roof Structure
+        centerpieceSvg = `
+          <path d="M 500,80 C 620,260 760,340 920,440 C 720,470 590,530 500,610 C 410,530 280,470 80,440 C 240,340 380,260 500,80 Z"
+            fill="#dc2626" fill-opacity="0.16" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="8 4" />
+          <circle cx="500" cy="390" r="65" fill="#dc2626" fill-opacity="0.22" stroke="#f87171" stroke-width="2" />
+        `;
+      } else if (park.mapStyle === "lagoon-loop") {
+        // Universal Studios Central Lagoon & Pathways
+        centerpieceSvg = `
+          <ellipse cx="510" cy="320" rx="185" ry="115" fill="#0284c7" fill-opacity="0.28" stroke="#38bdf8" stroke-width="2" />
+          <ellipse cx="510" cy="320" rx="285" ry="195" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="6" stroke-dasharray="12 8" />
+        `;
+      } else if (park.mapStyle === "castle-hub") {
+        // Disney Hub-and-Spoke Radiating Pathways & Central Castle
+        centerpieceSvg = `
+          <circle cx="500" cy="330" r="52" fill="${park.brandColor}" fill-opacity="0.25" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" />
+          <line x1="500" y1="330" x2="500" y2="590" stroke="#ffffff" stroke-opacity="0.22" stroke-width="10" />
+          <line x1="500" y1="330" x2="220" y2="260" stroke="#ffffff" stroke-opacity="0.15" stroke-width="5" />
+          <line x1="500" y1="330" x2="780" y2="260" stroke="#ffffff" stroke-opacity="0.15" stroke-width="5" />
+          <line x1="500" y1="330" x2="260" y2="450" stroke="#ffffff" stroke-opacity="0.15" stroke-width="5" />
+          <line x1="500" y1="330" x2="760" y2="450" stroke="#ffffff" stroke-opacity="0.15" stroke-width="5" />
+        `;
+      } else if (park.mapStyle === "mountain-hub") {
+        // Canada's Wonderland Wonder Mountain & Coaster Loops
+        centerpieceSvg = `
+          <polygon points="500,210 585,355 415,355" fill="#64748b" fill-opacity="0.35" stroke="#94a3b8" stroke-width="2" />
+          <ellipse cx="500" cy="340" rx="310" ry="200" fill="none" stroke="#ffffff" stroke-opacity="0.15" stroke-width="5" stroke-dasharray="10 6" />
+        `;
+      } else {
+        // Indoor Plaza & Radial Soundstages
+        centerpieceSvg = `
+          <rect x="90" y="65" width="820" height="490" rx="48" fill="#18181b" fill-opacity="0.45" stroke="#ffffff" stroke-opacity="0.14" stroke-width="2" />
+          <circle cx="500" cy="310" r="70" fill="${park.brandColor}" fill-opacity="0.18" stroke="#ffffff" stroke-opacity="0.25" stroke-width="2" />
+        `;
+      }
+
+      // Generate Colored Themed Land Zones on the 1000x625 Illustrated Canvas
+      const landsSvg = park.lands.map(land => {
+        const cx = land.cx * 10;
+        const cy = land.cy * 6.25;
+        const rx = land.rx * 10;
+        const ry = land.ry * 6.25;
+        return `
+          <g>
+            <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"
+              fill="${land.color}" fill-opacity="0.18"
+              stroke="${land.color}" stroke-opacity="0.65" stroke-width="2" />
+            <text x="${cx}" y="${cy - ry + 22}" text-anchor="middle"
+              fill="${land.color}" font-family="Geist Mono, monospace" font-size="11" font-weight="700" letter-spacing="1.5">
+              ${land.name.toUpperCase()}
+            </text>
+          </g>
+        `;
+      }).join("");
+
+      svgContainer.innerHTML = `
+        <svg viewBox="0 0 1000 625" class="w-full h-full object-cover">
+          <defs>
+            <radialGradient id="parkGlow" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stop-color="${park.brandColor}" stop-opacity="0.22" />
+              <stop offset="100%" stop-color="#09090b" stop-opacity="0.95" />
+            </radialGradient>
+            <pattern id="mapGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+            </pattern>
+          </defs>
+
+          <!-- Base Cartographic Canvas -->
+          <rect width="1000" height="625" fill="url(#parkGlow)" />
+          <rect width="1000" height="625" fill="url(#mapGrid)" />
+
+          <!-- Park Centerpiece & Pathways -->
+          ${centerpieceSvg}
+
+          <!-- Themed Land Zones -->
+          ${landsSvg}
+
+          <!-- Main Entrance Gate Marker -->
+          <g transform="translate(500, 590)">
+            <rect x="-65" y="-14" width="130" height="24" rx="6" fill="#18181b" stroke="rgba(255,255,255,0.25)" />
+            <text x="0" y="2" text-anchor="middle" fill="#a1a1aa" font-family="Geist Mono, monospace" font-size="10" font-weight="600">
+              PARK ENTRANCE GATE
+            </text>
+          </g>
+        </svg>
+
+        <!-- Park Brand Cartouche in Top-Left of Illustrated Map -->
+        <div class="absolute top-16 left-5 flex items-center gap-3 bg-zinc-950/85 backdrop-blur-md border border-white/15 p-2.5 pr-4 rounded-xl shadow-lg pointer-events-none">
+          <div class="w-10 h-10 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 overflow-hidden">
+            ${getLogoHtml(park)}
+          </div>
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-wider text-zinc-400">Interactive Illustrated Guide</div>
+            <div class="text-sm font-bold text-white">${park.name}</div>
+          </div>
+        </div>
+      `;
+
+      // Render Interactive Ride Pins Directly Over the Illustrated Park Map
+      pinsContainer.innerHTML = "";
+      const rides = getAllRidesForPark(park);
+      rides.forEach((ride, idx) => {
+        const isChecked = !!riddenRides[ride.id];
+        const pos = ride.mapPos || [30 + ((idx * 17) % 45), 30 + ((idx * 23) % 45)];
+        const landObj = park.lands.find(l => l.name === ride.land);
+        const landColor = landObj ? landObj.color : park.brandColor;
+
+        const pin = document.createElement("button");
+        pin.className = `illus-pin absolute flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold shadow-xl whitespace-nowrap focus:outline-none ${
+          isChecked
+            ? "bg-emerald-500 border-white text-zinc-950"
+            : "bg-zinc-950/95 border-white/25 text-white hover:border-white"
+        }`;
+        pin.style.left = `${pos[0]}%`;
+        pin.style.top = `${pos[1]}%`;
+        pin.style.zIndex = isChecked ? "30" : "20";
+        pin.onclick = () => toggleRide(ride.id);
+
+        pin.innerHTML = `
+          <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-mono font-bold"
+            style="background:${isChecked ? '#052e16' : landColor}; color:#fff">
+            ${isChecked ? '<i class="ph-bold ph-check"></i>' : idx + 1}
+          </span>
+          <span>${ride.name}</span>
+        `;
+        pinsContainer.appendChild(pin);
+      });
+
+      // Render Bottom Themed Lands Key
+      legendContainer.innerHTML = park.lands.map(land => `
+        <span class="inline-flex items-center gap-1.5 shrink-0 text-[11px] font-medium text-zinc-300">
+          <span class="w-2.5 h-2.5 rounded-sm" style="background:${land.color}"></span>
+          <span>${land.name}</span>
+        </span>
+      `).join("");
+    }
+
+    // Render Official Park Map Brochure Stage (Direct PDF Embed or Official Map Portal Card)
+    function renderOfficialBrochureStage(park) {
+      const container = document.getElementById("official-brochure-content");
+
+      if (park.embedPdfUrl) {
+        container.innerHTML = `
+          <div class="px-6 py-3 bg-zinc-900 border-b border-white/10 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2.5">
+              <i class="ph-bold ph-file-pdf text-accent-400 text-lg"></i>
+              <span class="text-xs font-semibold text-white">${park.name} — Official Printable Park Map PDF</span>
+            </div>
+            <a href="${park.officialMapUrl}" target="_blank" rel="noopener noreferrer"
+              class="px-3 py-1 rounded-lg bg-accent-600 hover:bg-accent-500 text-white text-xs font-semibold flex items-center gap-1.5 transition">
+              <span>Open Full-Screen Official Map</span>
+              <i class="ph-bold ph-arrow-up-right"></i>
+            </a>
+          </div>
+          <iframe src="${park.embedPdfUrl}" class="flex-1 w-full bg-zinc-900 border-0"></iframe>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="flex-1 flex items-center justify-center p-6 overflow-y-auto">
+            <div class="max-w-lg w-full rounded-2xl bg-zinc-900 border border-white/15 overflow-hidden shadow-2xl">
+              <div class="relative h-48 bg-zinc-950">
+                <img src="${park.heroImg}" alt="${park.name}" class="w-full h-full object-cover opacity-70" />
+                <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent"></div>
+                <div class="absolute bottom-4 left-5 flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-white p-1.5 shadow-lg flex items-center justify-center overflow-hidden">
+                    ${getLogoHtml(park)}
+                  </div>
+                  <div>
+                    <div class="font-mono text-[10px] uppercase tracking-wider text-accent-400">Official Source Map</div>
+                    <h3 class="text-lg font-bold text-white">${park.name}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="p-5 space-y-4">
+                <p class="text-xs text-zinc-300 leading-relaxed">
+                  ${park.name} hosts its interactive digital park map and live attraction guide directly on its official resort domain. Launch the official map portal below or use the <strong class="text-white">Illustrated Park Map</strong> and <strong class="text-white">Aerial Coaster Map</strong> tabs above to check off rides directly on the park layout.
+                </p>
+                <div class="flex flex-wrap gap-2.5">
+                  <a href="${park.officialMapUrl}" target="_blank" rel="noopener noreferrer"
+                    class="flex-1 py-2.5 px-4 rounded-xl bg-accent-600 hover:bg-accent-500 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-lg transition">
+                    <i class="ph-bold ph-map-trifold text-sm"></i>
+                    <span>Launch Official ${park.shortName} Map</span>
+                    <i class="ph-bold ph-arrow-up-right"></i>
+                  </a>
+                  <button onclick="setParkMapView('illustrated')"
+                    class="py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition">
+                    Back to Illustrated Map
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
     }
 
     function setRideStatusFilter(status) {
@@ -813,8 +1375,8 @@
       ["all", "ridden", "unridden"].forEach(s => {
         const btn = document.getElementById(`rf-${s}`);
         btn.className = s === status
-          ? "px-2 py-0.5 rounded bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 transition"
-          : "px-2 py-0.5 rounded text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition";
+          ? "px-2.5 py-1 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 transition"
+          : "px-2.5 py-1 rounded-md text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition";
       });
       if (activeParkId) {
         renderParkDetailRides(PARKS_DATA.find(p => p.id === activeParkId));
@@ -826,7 +1388,7 @@
       const riddenCount = allRides.filter(r => riddenRides[r.id]).length;
       const pct = allRides.length ? Math.round((riddenCount / allRides.length) * 100) : 0;
 
-      document.getElementById("detail-progress-text").textContent = `${riddenCount} / ${allRides.length} ridden (${pct}%)`;
+      document.getElementById("detail-progress-text").textContent = `${riddenCount} / ${allRides.length} rides logged (${pct}%)`;
       document.getElementById("detail-progress-bar").style.width = `${pct}%`;
 
       const filtered = allRides.filter(r => {
@@ -846,44 +1408,50 @@
 
       Object.entries(grouped).forEach(([land, landRides]) => {
         const landDone = landRides.filter(r => riddenRides[r.id]).length;
+        const landObj = park.lands.find(l => l.name === land);
+        const badgeColor = landObj ? landObj.color : park.brandColor;
+
         const section = document.createElement("div");
         section.innerHTML = `
           <div class="flex items-center justify-between mb-2">
-            <span class="font-mono text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">${land}</span>
-            <span class="font-mono text-[10px] text-zinc-400 tabular-nums">${landDone}/${landRides.length}</span>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-sm" style="background:${badgeColor}"></span>
+              <span class="font-mono text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">${land}</span>
+            </div>
+            <span class="font-mono text-[11px] text-zinc-400 tabular-nums">${landDone}/${landRides.length}</span>
           </div>
         `;
 
         const list = document.createElement("div");
-        list.className = "space-y-1";
+        list.className = "space-y-1.5";
 
         landRides.forEach(ride => {
           const isChecked = !!riddenRides[ride.id];
           const item = document.createElement("div");
-          item.className = `group flex items-center justify-between px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+          item.className = `group flex items-center justify-between px-3 py-2.5 rounded-xl border cursor-pointer transition-all ${
             isChecked
-              ? "bg-zinc-900/5 dark:bg-white/5 border-zinc-300 dark:border-zinc-700"
-              : "bg-transparent border-zinc-200/70 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700"
+              ? "bg-emerald-500/10 border-emerald-500/40"
+              : "bg-zinc-50/60 dark:bg-zinc-900/50 border-zinc-200/70 dark:border-zinc-800/80 hover:border-zinc-400 dark:hover:border-zinc-700"
           }`;
           item.onclick = () => toggleRide(ride.id);
 
           item.innerHTML = `
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div class="w-4 h-4 rounded flex items-center justify-center border transition ${
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-5 h-5 rounded-md flex items-center justify-center border transition shrink-0 ${
                 isChecked
-                  ? "bg-accent-600 border-accent-600 text-white"
-                  : "border-zinc-300 dark:border-zinc-700 text-transparent"
+                  ? "bg-emerald-500 border-emerald-500 text-zinc-950"
+                  : "border-zinc-300 dark:border-zinc-700 text-transparent group-hover:border-zinc-400"
               }">
-                <i class="ph-bold ph-check text-[10px]"></i>
+                <i class="ph-bold ph-check text-xs"></i>
               </div>
               <div class="min-w-0">
-                <div class="text-xs font-medium text-zinc-900 dark:text-zinc-100 truncate">${ride.name}</div>
-                <div class="text-[11px] text-zinc-400 dark:text-zinc-500 truncate">${ride.type}</div>
+                <div class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">${ride.name}</div>
+                <div class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">${ride.type}</div>
               </div>
             </div>
-            <button onclick="event.stopPropagation(); focusRidePin('${ride.id}')" title="Locate on Map"
-              class="shrink-0 ml-2 w-6 h-6 rounded hover:bg-zinc-200/60 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition">
-              <i class="ph ph-crosshair text-xs"></i>
+            <button onclick="event.stopPropagation(); focusRideOnAerialMap('${ride.id}')" title="View on Aerial Coaster Map"
+              class="shrink-0 ml-2 w-7 h-7 rounded-lg hover:bg-zinc-200/70 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
+              <i class="ph-bold ph-crosshair text-xs"></i>
             </button>
           `;
           list.appendChild(item);
@@ -894,56 +1462,59 @@
       });
     }
 
+    // Aerial Satellite Coaster Pins & Land Zones
     function renderParkRideMarkers(park) {
       rideMarkersGroup.clearLayers();
+      landPolygonsGroup.clearLayers();
       const rides = getAllRidesForPark(park);
 
-      rides.forEach(ride => {
+      rides.forEach((ride, idx) => {
         const isChecked = !!riddenRides[ride.id];
         const lat = park.coords[0] + (ride.offset ? ride.offset[0] : 0);
         const lng = park.coords[1] + (ride.offset ? ride.offset[1] : 0);
 
         const pinHtml = `
-          <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-[11px] font-medium whitespace-nowrap shadow-md transition-transform hover:scale-105 ${
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold whitespace-nowrap shadow-xl transition-transform hover:scale-105 ${
             isChecked
-              ? "bg-accent-600 border-white/30 text-white"
-              : "bg-zinc-950/90 border-zinc-700 text-zinc-100"
+              ? "bg-emerald-500 border-white text-zinc-950"
+              : "bg-zinc-950/95 border-white/30 text-white"
           }">
-            <i class="ph-bold ${isChecked ? 'ph-check' : 'ph-ticket'} text-[10px]"></i>
+            <span class="font-mono text-[10px] font-bold">${isChecked ? '✓' : idx + 1}</span>
             <span>${ride.name}</span>
           </div>
         `;
-        const icon = L.divIcon({ html: pinHtml, className: "", iconAnchor: [40, 12] });
+        const icon = L.divIcon({ html: pinHtml, className: "", iconAnchor: [45, 14] });
         const marker = L.marker([lat, lng], { icon }).addTo(rideMarkersGroup);
         marker.rideId = ride.id;
 
         marker.bindPopup(`
-          <div class="min-w-[180px]">
-            <div class="font-mono text-[10px] uppercase tracking-wider text-zinc-400">${ride.land}</div>
-            <div class="text-xs font-semibold text-white mt-0.5">${ride.name}</div>
-            <div class="text-[11px] text-zinc-400 mb-2.5">${ride.type}</div>
-            <button onclick="toggleRide('${ride.id}')" class="w-full py-1.5 px-2.5 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition ${
-              isChecked ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200" : "bg-accent-600 hover:bg-accent-500 text-white"
+          <div class="min-w-[190px]">
+            <div class="font-mono text-[10px] uppercase tracking-wider text-accent-400 font-bold">${ride.land}</div>
+            <div class="text-xs font-bold text-white mt-0.5">${ride.name}</div>
+            <div class="text-[11px] text-zinc-400 mb-3">${ride.type}</div>
+            <button onclick="toggleRide('${ride.id}')" class="w-full py-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+              isChecked ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200" : "bg-emerald-500 hover:bg-emerald-400 text-zinc-950"
             }">
               <i class="ph-bold ${isChecked ? 'ph-x' : 'ph-check'} text-xs"></i>
-              <span>${isChecked ? "Unmark Ride" : "Mark as Ridden"}</span>
+              <span>${isChecked ? "Remove Credit" : "Log Ride Credit"}</span>
             </button>
           </div>
         `);
       });
     }
 
-    function focusRidePin(rideId) {
+    function focusRideOnAerialMap(rideId) {
       if (!activeParkId) return;
       const park = PARKS_DATA.find(p => p.id === activeParkId);
       const ride = getAllRidesForPark(park).find(r => r.id === rideId);
       if (!ride) return;
 
       if (window.innerWidth < 1024) switchMobileTab("map");
+      setParkMapView("satellite");
 
       const lat = park.coords[0] + (ride.offset ? ride.offset[0] : 0);
       const lng = park.coords[1] + (ride.offset ? ride.offset[1] : 0);
-      map.flyTo([lat, lng], 18, { duration: 0.6 });
+      map.flyTo([lat, lng], 18, { duration: 0.7 });
 
       rideMarkersGroup.eachLayer(layer => {
         if (layer.rideId === rideId) layer.openPopup();
@@ -958,6 +1529,9 @@
         const park = PARKS_DATA.find(p => p.id === activeParkId);
         renderParkDetailRides(park);
         renderParkRideMarkers(park);
+        if (activeParkMapView === "illustrated") {
+          renderIllustratedParkMap(park);
+        }
       } else {
         renderGlobalMarkers();
       }
@@ -973,6 +1547,9 @@
       updateGlobalStats();
       renderParkDetailRides(park);
       renderParkRideMarkers(park);
+      if (activeParkMapView === "illustrated") {
+        renderIllustratedParkMap(park);
+      }
     }
 
     function toggleAddRideDrawer() {
@@ -984,7 +1561,8 @@
       const nameInput = document.getElementById("new-ride-name");
       const landInput = document.getElementById("new-ride-land");
       const name = nameInput.value.trim();
-      const land = landInput.value.trim() || "Additional";
+      const park = PARKS_DATA.find(p => p.id === activeParkId);
+      const land = landInput.value.trim() || (park.lands[0] ? park.lands[0].name : "Park Attraction");
       if (!name) return;
 
       if (!customRides[activeParkId]) customRides[activeParkId] = [];
@@ -993,8 +1571,9 @@
         id: newId,
         name,
         land,
-        type: "Custom Entry",
-        offset: [(Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002]
+        type: "Custom Logged Attraction",
+        offset: [(Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002],
+        mapPos: [35 + Math.floor(Math.random() * 30), 35 + Math.floor(Math.random() * 30)]
       });
       riddenRides[newId] = true;
 
@@ -1005,21 +1584,27 @@
       landInput.value = "";
       document.getElementById("custom-ride-drawer").classList.add("hidden");
 
-      const park = PARKS_DATA.find(p => p.id === activeParkId);
       renderParkDetailRides(park);
       renderParkRideMarkers(park);
+      if (activeParkMapView === "illustrated") renderIllustratedParkMap(park);
       updateGlobalStats();
     }
 
     function resetWorldView() {
       activeParkId = null;
       rideMarkersGroup.clearLayers();
+      landPolygonsGroup.clearLayers();
       document.getElementById("view-park-detail").classList.add("hidden");
       document.getElementById("view-directory").classList.remove("hidden");
       document.getElementById("world-reset-btn").classList.add("hidden");
       document.getElementById("world-reset-btn").classList.remove("inline-flex");
-      document.getElementById("header-context").textContent = "World Index";
-      switchBasemap("canvas");
+      document.getElementById("park-map-toolbar").classList.add("hidden");
+      document.getElementById("illustrated-map-stage").classList.add("hidden");
+      document.getElementById("official-brochure-stage").classList.add("hidden");
+      document.getElementById("header-context").textContent = "World Park Atlas";
+
+      applyWorldBasemap();
+      map.invalidateSize();
       map.flyTo([25, 45], 3, { duration: 1.0 });
       renderParkDirectory();
       renderGlobalMarkers();
@@ -1031,8 +1616,8 @@
       const tabList = document.getElementById("mob-tab-list");
       const tabMap = document.getElementById("mob-tab-map");
 
-      const activeClass = "flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100";
-      const inactiveClass = "flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-medium text-zinc-500 dark:text-zinc-400";
+      const activeClass = "flex items-center justify-center gap-2 rounded-lg text-xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900";
+      const inactiveClass = "flex items-center justify-center gap-2 rounded-lg text-xs font-semibold text-zinc-500 dark:text-zinc-400";
 
       tabList.className = tab === "list" ? activeClass : inactiveClass;
       tabMap.className = tab === "map" ? activeClass : inactiveClass;
@@ -1043,6 +1628,7 @@
       } else {
         drawer.classList.add("hidden");
         mapWorkspace.classList.remove("hidden");
+        mapWorkspace.classList.add("flex");
         setTimeout(() => map.invalidateSize(), 50);
       }
     }
@@ -1055,7 +1641,7 @@
       map.invalidateSize();
     });
 
-    // Boot
+    // Boot Coaster to Coaster
     renderParkDirectory();
     renderGlobalMarkers();
     updateGlobalStats();
